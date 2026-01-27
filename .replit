@@ -1,0 +1,10 @@
+[workflows]
+
+[[workflows.workflow]]
+name = "run"
+mode = "sequential"
+author = 21132816
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python index.py"

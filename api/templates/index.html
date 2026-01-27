@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Content Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    {% if not session.get('user_id') %}
+    <!-- Landing Page for Non-logged-in Users -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <img 
+            src="{{ page.preview_image if page.preview_image else 'https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=Welcome+to+Content+Hub' }}" 
+            alt="Welcome" 
+            class="w-full h-96 object-cover"
+        />
+        <div class="p-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">{{ page.title if page.title else 'Welcome to Content Hub' }}</h2>
+            <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                {{ page.description if page.description else 'Unlock premium content with our subscription! Get access to exclusive tutorials, music tracks, and premium blog posts. Subscribe today for just $9.99/month.' }}
+            </p>
+            <div class="flex gap-4">
+                <a href="/login" class="text-white px-8 py-3 rounded-lg hover:opacity-90 transition text-lg font-semibold" style="background-color: {{ page.accent_color if page.accent_color else '#4F46E5' }}">
+                    Login
+                </a>
+                <a href="/register" class="text-white px-8 py-3 rounded-lg hover:opacity-90 transition text-lg font-semibold bg-gray-600">
+                    Register
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Home Page for Logged-in Users -->
+    <div class="space-y-8">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <img 
+                src="{{ page.preview_image if page.preview_image else 'https://via.placeholder.com/800x400/4F46E5/FFFFFF?text=Welcome+to+Content+Hub' }}" 
+                alt="Welcome" 
+                class="w-full h-96 object-cover"
+            />
+            <div class="p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Welcome to Content Hub</h2>
+                <p class="text-gray-600 text-lg leading-relaxed mb-6">
+                    {{ page.description if page.description else 'Unlock premium content with our subscription! Get access to exclusive tutorials, music tracks, and premium blog posts. Subscribe today for just $9.99/month.' }}
+                </p>
+                {% if not session.get('is_subscribed') and not session.get('is_admin') %}
+                <button 
+                    class="text-white px-8 py-3 rounded-lg hover:opacity-90 transition text-lg font-semibold"
+                    style="background-color: {{ page.accent_color if page.accent_color else '#4F46E5' }}"
+                >
+                    Subscribe Now
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if session.get('is_admin') %}
+        <!-- Edit Home Page (Admin Only) -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Edit Home Page</h3>
+                <button onclick="toggleEditHome()" class="p-2 text-indigo-600 hover:bg-indigo-50 rounded">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                </button>
+            </div>
+            <div id="editHomeForm" class="hidden space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Preview Image URL</label>
+                    <input
+                        type="text"
+                        id="previewImage"
+                        value="{{ page.preview_image if page.preview_image else '' }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                        placeholder="Image URL"
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                    <input
+                        type="text"
+                        id="homeTitle"
+                        value="{{ page.title if page.title else 'Welcome to Content Hub' }}"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea
+                        id="homeDescription"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg h-32"
+                    >{{ page.description if page.description else 'Unlock premium content with our subscription! Get access to exclusive tutorials, music tracks, and premium blog posts. Subscribe today for just $9.99/month.' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color (Hex)</label>
+                    <div class="flex gap-2">
+                        <input
+                            type="text"
+                            id="accentColor"
+                            value="{{ page.accent_color if page.accent_color else '#4F46E5' }}"
+                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-mono"
+                            placeholder="#4F46E5"
+                        />
+                        <div 
+                            id="colorPreview"
+                            class="w-12 h-10 rounded border-2 border-gray-300"
+                            style="background-color: {{ page.accent_color if page.accent_color else '#4F46E5' }}"
+                        ></div>
+                    </div>
+                </div>
+                <button
+                    onclick="saveHomeSettings()"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                    Save Changes
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleEditHome() {
+        const form = document.getElementById('editHomeForm');
+        form.classList.toggle('hidden');
+    }
+
+    function saveHomeSettings() {
+        const previewImage = document.getElementById('previewImage').value;
+        const title = document.getElementById('homeTitle').value;
+        const description = document.getElementById('homeDescription').value;
+        const accentColor = document.getElementById('accentColor').value;
+
+        // Validate hex color
+        if (!/^#[0-9A-F]{6}$/i.test(accentColor)) {
+            alert('Please enter a valid hex color code (e.g., #4F46E5)');
+            return;
+        }
+
+        fetch('/api/pages/home', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                preview_image: previewImage,
+                title: title,
+                description: description,
+                accent_color: accentColor
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Home page updated successfully!');
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update home page');
+        });
+    }
+
+    // Update color preview when input changes
+    document.addEventListener('DOMContentLoaded', function() {
+        const colorInput = document.getElementById('accentColor');
+        const colorPreview = document.getElementById('colorPreview');
+        
+        if (colorInput && colorPreview) {
+            colorInput.addEventListener('input', function() {
+                if (/^#[0-9A-F]{6}$/i.test(this.value)) {
+                    colorPreview.style.backgroundColor = this.value;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

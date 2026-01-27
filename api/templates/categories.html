@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Categories - Content Hub{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">Categories</h2>
+        <p class="text-gray-600">Browse our content categories</p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="mb-6">
+        <input
+            type="text"
+            id="categorySearch"
+            placeholder="Search categories..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            onkeyup="filterCategories()"
+        />
+    </div>
+
+    <!-- Categories Grid -->
+    <div id="categoriesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for category in categories %}
+        <a href="/category/{{ category._id }}" class="category-card block bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition transform hover:-translate-y-1" data-name="{{ category.name.lower() }}">
+            <div class="gradient-bg p-6 text-white" style="--gradient-start: {{ category.accent_color }}; --gradient-end: {{ category.accent_color }}dd;">
+                <h3 class="text-xl font-bold mb-2">{{ category.name }}</h3>
+                <p class="text-sm text-white/90">
+                    {% if category.is_free %}
+                    Free Content
+                    {% else %}
+                    Premium Content
+                    {% endif %}
+                </p>
+            </div>
+            <div class="p-6">
+                <p class="text-gray-600 text-sm">
+                    {{ category.description if category.description else 'Click to view content in this category' }}
+                </p>
+                <div class="mt-4 flex items-center justify-between">
+                    <span class="text-xs px-3 py-1 rounded-full {% if category.is_free %}bg-green-100 text-green-700{% else %}bg-purple-100 text-purple-700{% endif %}">
+                        {% if category.is_free %}Free{% else %}Premium{% endif %}
+                    </span>
+                    <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if categories|length == 0 %}
+    <div class="text-center py-12">
+        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+        </svg>
+        <p class="text-gray-500 text-lg">No categories available</p>
+        {% if session.get('is_admin') %}
+        <p class="text-gray-400 text-sm mt-2">Go to the Admin Panel to create categories</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function filterCategories() {
+        const searchTerm = document.getElementById('categorySearch').value.toLowerCase();
+        const cards = document.querySelectorAll('.category-card');
+        
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name');
+            if (name.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}
