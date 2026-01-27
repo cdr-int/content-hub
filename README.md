@@ -240,6 +240,12 @@ All styling uses Tailwind CSS. You can:
 
 This project is provided as-is for your use.
 
+## Documentation
+
+For additional guides and documentation, check out the [docs/](docs/) directory:
+
+- [Getting Started with Vercel Web Analytics](docs/analytics/getting-started-with-web-analytics.md) - Comprehensive guide for setting up Vercel Web Analytics across multiple frameworks
+
 ## Support
 
 For issues or questions:
