@@ -59,9 +59,15 @@
             
             <!-- Card Content -->
             <div class="p-6">
+                {% if category.description %}
                 <p class="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-3">
-                    {{ category.description if category.description else 'Click to view content in this category' }}
+                    {{ category.description }}
                 </p>
+                {% else %}
+                <p class="text-gray-400 text-sm leading-relaxed mb-4 italic">
+                    Click to view content in this category
+                </p>
+                {% endif %}
                 
                 <!-- Card Footer -->
                 <div class="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -69,7 +75,7 @@
                         <div class="w-2 h-2 rounded-full" style="background-color: {{ category.accent_color }}"></div>
                         <span class="text-xs text-gray-500 font-medium">View Content</span>
                     </div>
-                    <svg class="w-5 h-5 text-gray-400 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="w-5 h-5 text-gray-400 group-hover:translate-x-1 transition-all" style="color: {{ category.accent_color }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
                 </div>
