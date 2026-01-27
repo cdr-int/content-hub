@@ -1,3 +1,4 @@
+modules = ["python-3.11"]
 [workflows]
 
 [[workflows.workflow]]
@@ -7,4 +8,10 @@ author = 21132816
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python index.py"
+args = "python api/index.py"
+
+[nix]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
