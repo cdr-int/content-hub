@@ -29,7 +29,7 @@
     <div id="categoriesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {% for category in categories %}
         <a href="{% if is_admin or is_subscribed or category.is_free %}/category/{{ category._id }}{% else %}#{% endif %}" 
-           {% if not is_admin and not is_subscribed and not category.is_free %}onclick="event.preventDefault(); window.location.href='discord.effexor.cc';"{% endif %}
+           {% if not is_admin and not is_subscribed and not category.is_free %}onclick="event.preventDefault(); window.location.href='https://discord.effexor.cc/';"{% endif %}
            class="category-card group block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2" data-name="{{ category.name.lower() }}">
             <!-- Card Header with Gradient -->
             <div class="relative h-32 gradient-bg overflow-hidden" style="--gradient-start: {{ category.accent_color }}; --gradient-end: {{ category.accent_color }}dd;">

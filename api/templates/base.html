@@ -108,7 +108,7 @@
                                     {% for category in sidebar_categories %}
                                     <a 
                                         href="{% if session.get('is_admin') or session.get('is_subscribed') or category.is_free %}/category/{{ category._id }}{% else %}#{% endif %}"
-                                        {% if not session.get('is_admin') and not session.get('is_subscribed') and not category.is_free %}onclick="event.preventDefault(); window.location.href='discord.effexor.cc';"{% endif %}
+                                        {% if not session.get('is_admin') and not session.get('is_subscribed') and not category.is_free %}onclick="event.preventDefault(); window.location.href='https://discord.effexor.cc/';"{% endif %}
                                         class="sidebar-category-link w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-gray-100 rounded-lg transition"
                                         data-name="{{ category.name.lower() }}"
                                     >
