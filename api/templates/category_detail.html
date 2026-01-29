@@ -237,283 +237,74 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                     </button>
-                    <button onclick="deleteCategory()" class="p-2 text-white hover:bg-gray-900/20 rounded-lg transition" title="Delete Category">
-                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
                 </div>
                 {% endif %}
             </div>
         </div>
 
+        <!-- Edit Category Form -->
         {% if is_admin %}
-        <!-- Edit Category Form (Admin Only) -->
-        <div id="editCategoryForm" class="hidden p-4 sm:p-6 style="background-color: rgb(18, 18, 20);" border-b">
-            <h3 class="text-lg font-semibold mb-4 text-gray-200">Edit Category</h3>
+        <div id="editCategoryForm" class="hidden p-4 sm:p-6 bg-gray-800/50 border-b border-gray-700">
+            <h3 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-300">Edit Category</h3>
             <div class="space-y-3">
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Category Name</label>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Category Name</label>
                     <input
                         type="text"
                         id="categoryName"
                         value="{{ category.name }}"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                        placeholder="Category name"
+                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200 placeholder-gray-500"
                     />
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                    <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Description</label>
                     <textarea
                         id="categoryDescription"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent h-24 sm:h-32 resize-y text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                        placeholder="Category description (supports multiple lines)"
-                    >{{ category.description if category.description else '' }}</textarea>
+                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg h-20 text-sm sm:text-base bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                    >{{ category.description }}</textarea>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Accent Color</label>
-                        <div class="flex gap-2">
-                            <input
-                                type="text"
-                                id="categoryColor"
-                                value="{{ category.accent_color }}"
-                                class="flex-1 px-3 sm:px-4 py-2 border border-gray-600 rounded-lg font-mono focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm bg-gray-800/50 text-gray-200 bg-gray-800/50 text-gray-200"
-                                placeholder="#4F46E5"
-                            />
-                            <input
-                                type="color"
-                                id="categoryColorPicker"
-                                value="{{ category.accent_color }}"
-                                class="w-10 sm:w-12 h-10 rounded-lg border-2 border-gray-600 cursor-pointer bg-gray-800 flex-shrink-0"
-                                title="Pick a color"
-                            />
-                        </div>
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Accent Color</label>
+                        <input
+                            type="text"
+                            id="categoryColor"
+                            value="{{ category.accent_color }}"
+                            class="hidden min-[425px]:block w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg font-mono text-sm sm:text-base bg-gray-800/50 text-gray-200"
+                        />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-1">Access Type</label>
-                        <label class="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-900 rounded-lg cursor-pointer border-2 category-accent-border border-gray-600 hover:border-indigo-400 transition h-10">
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Preview</label>
+                        <input
+                            type="color"
+                            id="categoryColorPicker"
+                            value="{{ category.accent_color }}"
+                            class="w-12 h-10 rounded border-2 border-gray-600 cursor-pointer bg-gray-800"
+                            style="padding: 2px; min-width: 2.5rem;"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Free</label>
+                        <label class="flex items-center h-10 px-3 sm:px-4 bg-gray-800/50 rounded-lg cursor-pointer border border-gray-600">
                             <input
                                 type="checkbox"
                                 id="categoryFree"
                                 {% if category.is_free %}checked{% endif %}
                                 class="w-4 h-4"
-                                style="accent-color: {{ category.accent_color }}"
                             />
-                            <span class="text-sm font-medium text-gray-300">Free Access</span>
                         </label>
                     </div>
                 </div>
-                <div class="flex flex-col sm:flex-row gap-2 pt-4">
+                <div class="flex gap-2">
                     <button
                         onclick="saveCategory()"
-                        class="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm sm:text-base"
+                        class="px-4 py-2 category-accent-btn text-white rounded-lg hover:opacity-90 text-sm sm:text-base"
                     >
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
                         Save Changes
                     </button>
                     <button
                         onclick="toggleEditCategory()"
-                        class="px-4 sm:px-6 py-2 bg-gray-600 text-gray-300 rounded-lg hover:bg-gray-400 transition text-sm sm:text-base"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Admin Actions -->
-        <div class="p-4 sm:p-6 bg-gray-800/50 border-b">
-            <div class="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
-                <button
-                    onclick="toggleAddContent()"
-                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 category-accent-btn text-white rounded-lg transition shadow-md hover:shadow-lg text-sm sm:text-base"
-                >
-                    <svg class="w-4 sm:w-5 h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    Add Content
-                </button>
-                <button
-                    onclick="toggleBulkUpload()"
-                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-lg transition shadow-md hover:shadow-lg hover:bg-purple-700 text-sm sm:text-base"
-                >
-                    <svg class="w-4 sm:w-5 h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    Bulk Upload
-                </button>
-                <button
-                    onclick="toggleAddFolder()"
-                    class="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-lg transition shadow-md hover:shadow-lg hover:bg-indigo-700 text-sm sm:text-base"
-                >
-                    <svg class="w-4 sm:w-5 h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                    </svg>
-                    Add Folder
-                </button>
-            </div>
-            
-            <!-- Add Folder Form -->
-            <div id="addFolderForm" class="hidden mt-4 space-y-3 bg-gray-900 p-4 sm:p-6 rounded-lg border shadow-sm">
-                <h4 class="font-semibold text-gray-200 text-sm sm:text-base">Create New Folder</h4>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Folder Name</label>
-                    <input
-                        type="text"
-                        id="folderName"
-                        placeholder="Enter folder name"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                    />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Description (optional)</label>
-                    <textarea
-                        id="folderDescription"
-                        placeholder="Enter folder description"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent h-20 resize-y text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                    ></textarea>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-2 pt-2">
-                    <button
-                        onclick="addFolder()"
-                        class="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm sm:text-base"
-                    >
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Create Folder
-                    </button>
-                    <button
-                        onclick="toggleAddFolder()"
-                        class="px-4 sm:px-6 py-2 bg-gray-600 text-gray-300 rounded-lg hover:bg-gray-400 transition text-sm sm:text-base"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Bulk Upload Form -->
-            <div id="bulkUploadForm" class="hidden mt-4 space-y-3 bg-gray-900 p-4 sm:p-6 rounded-lg border shadow-sm">
-                <h4 class="font-semibold text-gray-200 text-sm sm:text-base">Bulk Upload Media Links</h4>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Media Type</label>
-                    <select
-                        id="bulkMediaType"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                    >
-                        <option value="image">Images</option>
-                        <option value="video">Videos</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Destination</label>
-                    <select
-                        id="bulkDestination"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                    >
-                        <option value="">Category Root (No Folder)</option>
-                        {% for folder in folders %}
-                        <option value="{{ folder._id }}">{{ folder.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Paste URLs (one per line)</label>
-                    <textarea
-                        id="bulkUrls"
-                        placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg&#10;https://example.com/image3.jpg"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent h-32 sm:h-48 resize-y font-mono text-xs sm:text-sm bg-gray-800/50 text-gray-200 bg-gray-800/50 text-gray-200"
-                    ></textarea>
-                    <p class="text-xs text-gray-500 mt-1">Paste media URLs, one per line</p>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-2 pt-2">
-                    <button
-                        onclick="bulkUpload()"
-                        class="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition text-sm sm:text-base"
-                    >
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        Upload All
-                    </button>
-                    <button
-                        onclick="toggleBulkUpload()"
-                        class="px-4 sm:px-6 py-2 bg-gray-600 text-gray-300 rounded-lg hover:bg-gray-400 transition text-sm sm:text-base"
-                    >
-                        Cancel
-                    </button>
-                </div>
-            </div>
-            
-            <!-- Add Content Form -->
-            <div id="addContentForm" class="hidden mt-4 space-y-3 bg-gray-900 p-4 sm:p-6 rounded-lg border shadow-sm">
-                <h4 class="font-semibold text-gray-200 text-sm sm:text-base">Add New Content</h4>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Content Type</label>
-                    <select
-                        id="contentType"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                        onchange="updateContentForm()"
-                    >
-                        <option value="text">Text Only</option>
-                        <option value="image">Image</option>
-                        <option value="video">Video</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Folder (optional)</label>
-                    <select
-                        id="contentFolder"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                    >
-                        <option value="">No Folder (Root)</option>
-                        {% for folder in folders %}
-                        <option value="{{ folder._id }}">{{ folder.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Title (optional)</label>
-                    <input
-                        type="text"
-                        id="contentTitle"
-                        placeholder="Enter a title for this content"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                    />
-                </div>
-                <div id="urlField">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Media URL</label>
-                    <input
-                        type="text"
-                        id="contentUrl"
-                        placeholder="https://example.com/image.jpg"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                    />
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Caption/Text (optional)</label>
-                    <textarea
-                        id="contentCaption"
-                        placeholder="Add caption or text content"
-                        class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg category-accent-ring focus:ring-2 focus:border-transparent h-20 resize-y text-sm sm:text-base bg-gray-800/50 text-gray-200"
-                    ></textarea>
-                </div>
-                <div class="flex flex-col sm:flex-row gap-2 pt-2">
-                    <button
-                        onclick="addContent()"
-                        class="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm sm:text-base"
-                    >
-                        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Add Content
-                    </button>
-                    <button
-                        onclick="toggleAddContent()"
-                        class="px-4 sm:px-6 py-2 bg-gray-600 text-gray-300 rounded-lg hover:bg-gray-400 transition text-sm sm:text-base"
+                        class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm sm:text-base"
                     >
                         Cancel
                     </button>
@@ -522,254 +313,424 @@
         </div>
         {% endif %}
 
-        <!-- Content Section -->
-        <div class="p-4 sm:p-6">
-            <!-- Folders -->
-            {% if folders|length > 0 %}
-            <div class="mb-6 sm:mb-8">
-                <h3 class="text-lg sm:text-xl font-bold text-gray-200 mb-3 sm:mb-4 flex items-center gap-2">
-                    <svg class="w-5 sm:w-6 h-5 sm:h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+        <!-- Admin Controls -->
+        {% if is_admin %}
+        <div class="p-4 sm:p-6 border-b border-gray-700">
+            <div class="flex flex-wrap gap-2">
+                <button
+                    onclick="toggleAddContent()"
+                    class="flex items-center gap-2 px-3 sm:px-4 py-2 category-accent-btn text-white rounded-lg hover:opacity-90 text-sm sm:text-base"
+                >
+                    <svg class="w-4 sm:w-5 h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
-                    Folders
-                </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                    {% for folder in folders %}
-                    <div class="border-2 border-gray-700 rounded-lg p-3 sm:p-4 hover:border-indigo-400 transition cursor-pointer group" onclick="openFolder('{{ folder._id }}')">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
-                                <div class="category-accent-bg p-2 sm:p-3 rounded-lg flex-shrink-0">
-                                    <svg class="w-5 sm:w-6 h-5 sm:h-6 category-accent-text" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                                    </svg>
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="font-semibold text-gray-200 group-hover:text-indigo-600 transition text-sm sm:text-base truncate">{{ folder.name }}</h4>
-                                    {% if folder.description %}
-                                    <p class="text-xs sm:text-sm text-gray-500 mt-1 line-clamp-2">{{ folder.description }}</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% if is_admin %}
-                            <div class="flex gap-1 flex-shrink-0 ml-2">
-                                <button onclick="event.stopPropagation(); editFolder('{{ folder._id }}', '{{ folder.name }}', '{{ folder.description if folder.description else '' }}')" class="p-1.5 sm:p-2 text-gray-400 hover:bg-gray-800 rounded transition">
-                                    <svg class="w-3.5 sm:w-4 h-3.5 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                    </svg>
-                                </button>
-                                <button onclick="event.stopPropagation(); deleteFolder('{{ folder._id }}')" class="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded transition">
-                                    <svg class="w-3.5 sm:w-4 h-3.5 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </div>
-                            {% endif %}
-                        </div>
+                    Add Content
+                </button>
+                <button
+                    onclick="toggleBulkUpload()"
+                    class="flex items-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm sm:text-base"
+                >
+                    <svg class="w-4 sm:w-5 h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Bulk Upload
+                </button>
+                <button
+                    onclick="toggleAddFolder()"
+                    class="flex items-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base"
+                >
+                    <svg class="w-4 sm:w-5 h-4 sm:h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    Add Folder
+                </button>
+            </div>
+
+            <!-- Add Content Form -->
+            <div id="addContentForm" class="hidden mt-4 p-4 bg-gray-800/50 rounded-lg">
+                <h3 class="font-medium mb-3 text-gray-300 text-sm sm:text-base">Add New Content</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Content Type</label>
+                        <select id="newContentType" class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200" onchange="toggleContentFields()">
+                            <option value="image">Image</option>
+                            <option value="video">Video</option>
+                            <option value="text">Text</option>
+                        </select>
                     </div>
-                    {% endfor %}
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Folder (optional)</label>
+                        <select id="newContentFolder" class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200">
+                            <option value="">Root (No Folder)</option>
+                            {% for folder in folders %}
+                            <option value="{{ folder._id }}">{{ folder.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Title (optional)</label>
+                        <input
+                            type="text"
+                            id="newContentTitle"
+                            placeholder="Content title"
+                            class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        />
+                    </div>
+                    <div id="contentUrlField">
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Media URL</label>
+                        <input
+                            type="url"
+                            id="newContentUrl"
+                            placeholder="https://example.com/image.jpg"
+                            class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Caption/Text</label>
+                        <textarea
+                            id="newContentCaption"
+                            placeholder="Content caption or description"
+                            class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg h-20 text-sm sm:text-base bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        ></textarea>
+                    </div>
+                    <div class="flex gap-2">
+                        <button
+                            onclick="addContent()"
+                            class="px-4 py-2 category-accent-btn text-white rounded-lg hover:opacity-90 text-sm sm:text-base"
+                        >
+                            Add Content
+                        </button>
+                        <button
+                            onclick="toggleAddContent()"
+                            class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm sm:text-base"
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
-            {% endif %}
 
-            <!-- Root Content -->
-            <div>
-                <h3 class="text-lg sm:text-xl font-bold text-gray-200 mb-3 sm:mb-4">{% if folders|length > 0 %}Root Content{% else %}Content{% endif %}</h3>
-                {% if content_items|length > 0 %}
-                <div class="content-grid grid gap-3 sm:gap-4">
-                    {% for item in content_items %}
-                    <div id="content-{{ item._id }}" class="bg-gray-900 rounded-lg border-2 border-gray-700 overflow-hidden hover:border-indigo-400 transition-all group content-card relative">
-                        <div id="content-display-{{ item._id }}">
-                            {% if item.media_type == 'image' %}
-                            <div class="relative bg-gray-800 media-item" onclick="openLightbox('{{ item.media_url }}', 'image', '{{ item.title }}', '{{ item.caption }}')">
-                                <img src="{{ item.media_url }}" alt="{{ item.title }}" class="w-full h-auto object-contain" loading="lazy">
-                                {% if is_admin %}
-                                <div class="absolute top-1 sm:top-2 right-1 sm:right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onclick="event.stopPropagation()">
-                                    <button onclick="toggleEdit('{{ item._id }}')" class="p-1 sm:p-1.5 bg-gray-900/90 hover:bg-gray-900 rounded shadow-sm">
-                                        <svg class="w-3 sm:w-4 h-3 sm:h-4 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
-                                    <button onclick="deleteContent('{{ item._id }}')" class="p-1 sm:p-1.5 bg-gray-900/90 hover:bg-gray-900 rounded shadow-sm">
-                                        <svg class="w-3 sm:w-4 h-3 sm:h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                {% endif %}
-                                {% if item.title or item.caption %}
-                                <div class="content-overlay">
-                                    {% if item.title %}
-                                    <div class="content-overlay-title">{{ item.title }}</div>
-                                    {% endif %}
-                                    {% if item.caption %}
-                                    <div class="content-overlay-caption">{{ item.caption }}</div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% elif item.media_type == 'video' %}
-                            <div class="relative bg-gray-900">
-                                <video src="{{ item.media_url }}" controls class="w-full h-auto"></video>
-                                {% if is_admin %}
-                                <div class="absolute top-1 sm:top-2 right-1 sm:right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onclick="event.stopPropagation()">
-                                    <button onclick="toggleEdit('{{ item._id }}')" class="p-1 sm:p-1.5 bg-gray-900/90 hover:bg-gray-900 rounded shadow-sm">
-                                        <svg class="w-3 sm:w-4 h-3 sm:h-4 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
-                                    <button onclick="deleteContent('{{ item._id }}')" class="p-1 sm:p-1.5 bg-gray-900/90 hover:bg-gray-900 rounded shadow-sm">
-                                        <svg class="w-3 sm:w-4 h-3 sm:h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                {% endif %}
-                                {% if item.title or item.caption %}
-                                <div class="content-overlay">
-                                    {% if item.title %}
-                                    <div class="content-overlay-title">{{ item.title }}</div>
-                                    {% endif %}
-                                    {% if item.caption %}
-                                    <div class="content-overlay-caption">{{ item.caption }}</div>
-                                    {% endif %}
-                                </div>
-                                {% endif %}
-                            </div>
-                            {% else %}
-                            <div class="p-3 sm:p-4 min-h-[120px] sm:min-h-[150px] flex flex-col justify-between">
-                                <div>
-                                    {% if item.title %}
-                                    <h4 class="font-semibold text-gray-200 mb-2 text-xs sm:text-sm">{{ item.title }}</h4>
-                                    {% endif %}
-                                    <p class="text-xs sm:text-sm text-gray-400">{{ item.text or item.caption }}</p>
-                                </div>
-                                {% if is_admin %}
-                                <div class="flex gap-1 justify-end mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onclick="toggleEdit('{{ item._id }}')" class="p-1 hover:bg-gray-800 rounded">
-                                        <svg class="w-3 sm:w-4 h-3 sm:h-4 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
-                                    <button onclick="deleteContent('{{ item._id }}')" class="p-1 hover:bg-red-50 rounded">
-                                        <svg class="w-3 sm:w-4 h-3 sm:h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                {% endif %}
+            <!-- Bulk Upload Form -->
+            <div id="bulkUploadForm" class="hidden mt-4 p-4 bg-gray-800/50 rounded-lg">
+                <h3 class="font-medium mb-3 text-gray-300 text-sm sm:text-base">Bulk Upload URLs</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Media Type</label>
+                        <select id="bulkMediaType" class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200">
+                            <option value="image">Images</option>
+                            <option value="video">Videos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Folder (optional)</label>
+                        <select id="bulkContentFolder" class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200">
+                            <option value="">Root (No Folder)</option>
+                            {% for folder in folders %}
+                            <option value="{{ folder._id }}">{{ folder.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">URLs (one per line)</label>
+                        <textarea
+                            id="bulkUrls"
+                            placeholder="https://example.com/image1.jpg
+https://example.com/image2.jpg
+https://example.com/image3.jpg"
+                            class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg h-32 text-sm sm:text-base bg-gray-800/50 text-gray-200 placeholder-gray-500 font-mono"
+                        ></textarea>
+                    </div>
+                    <div class="flex gap-2">
+                        <button
+                            onclick="bulkUpload()"
+                            class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm sm:text-base"
+                        >
+                            Upload All
+                        </button>
+                        <button
+                            onclick="toggleBulkUpload()"
+                            class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm sm:text-base"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Folder Form -->
+            <div id="addFolderForm" class="hidden mt-4 p-4 bg-gray-800/50 rounded-lg">
+                <h3 class="font-medium mb-3 text-gray-300 text-sm sm:text-base">Create New Folder</h3>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Folder Name</label>
+                        <input
+                            type="text"
+                            id="newFolderName"
+                            placeholder="Enter folder name"
+                            class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-xs sm:text-sm font-medium text-gray-400 mb-1">Description (optional)</label>
+                        <textarea
+                            id="newFolderDescription"
+                            placeholder="Folder description"
+                            class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg h-20 text-sm sm:text-base bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        ></textarea>
+                    </div>
+                    <div class="flex gap-2">
+                        <button
+                            onclick="addFolder()"
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base"
+                        >
+                            Create Folder
+                        </button>
+                        <button
+                            onclick="toggleAddFolder()"
+                            class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 text-sm sm:text-base"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Folders Section -->
+        {% if folders|length > 0 %}
+        <div class="p-4 sm:p-6 border-b border-gray-700">
+            <h3 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-300">Folders</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {% for folder in folders %}
+                <div class="group relative bg-gray-800/50 rounded-lg p-4 hover:bg-gray-700/50 transition cursor-pointer" onclick="openFolder('{{ folder._id }}')">
+                    <div class="flex items-start justify-between mb-2">
+                        <svg class="w-10 h-10 sm:w-12 sm:h-12 category-accent-text" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                        {% if is_admin %}
+                        <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition" onclick="event.stopPropagation()">
+                            <button
+                                onclick="editFolder('{{ folder._id }}', '{{ folder.name }}', '{{ folder.description }}')"
+                                class="p-1 text-gray-400 hover:text-white hover:bg-gray-600 rounded"
+                                title="Edit folder"
+                            >
+                                <svg class="w-3.5 sm:w-4 h-3.5 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                            <button
+                                onclick="deleteFolder('{{ folder._id }}')"
+                                class="p-1 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded"
+                                title="Delete folder"
+                            >
+                                <svg class="w-3.5 sm:w-4 h-3.5 sm:h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <h4 class="font-semibold text-gray-200 text-sm sm:text-base truncate">{{ folder.name }}</h4>
+                    {% if folder.description %}
+                    <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ folder.description }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Content Grid -->
+        <div class="p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-gray-300">Content</h3>
+            {% if content_items|length > 0 %}
+            <div class="content-grid grid gap-3 sm:gap-4">
+                {% for item in content_items %}
+                <div id="content-{{ item._id }}" class="content-card group relative bg-gray-800/50 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                    <!-- Content Display -->
+                    <div id="content-display-{{ item._id }}">
+                        {% if item.media_type == 'image' %}
+                        <div class="media-item" onclick="openLightbox('{{ item.media_url }}', 'image', '{{ item.title }}', '{{ item.caption }}')">
+                            <img src="{{ item.media_url }}" alt="{{ item.title }}" loading="lazy" class="w-full h-auto">
+                            {% if item.title or item.caption %}
+                            <div class="content-overlay">
+                                {% if item.title %}<div class="content-overlay-title">{{ item.title }}</div>{% endif %}
+                                {% if item.caption %}<div class="content-overlay-caption">{{ item.caption }}</div>{% endif %}
                             </div>
                             {% endif %}
                         </div>
+                        {% elif item.media_type == 'video' %}
+                        <div class="relative">
+                            <video controls class="w-full h-auto">
+                                <source src="{{ item.media_url }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            {% if item.title or item.caption %}
+                            <div class="content-overlay">
+                                {% if item.title %}<div class="content-overlay-title">{{ item.title }}</div>{% endif %}
+                                {% if item.caption %}<div class="content-overlay-caption">{{ item.caption }}</div>{% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <div class="p-4">
+                            {% if item.title %}
+                            <h4 class="font-semibold text-gray-200 text-base mb-2">{{ item.title }}</h4>
+                            {% endif %}
+                            <p class="text-gray-400 text-sm whitespace-pre-wrap">{{ item.text or item.caption }}</p>
+                        </div>
+                        {% endif %}
 
                         {% if is_admin %}
-                        <!-- Edit Form -->
-                        <div id="edit-form-{{ item._id }}" class="hidden p-3 sm:p-4 space-y-2 sm:space-y-3">
+                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition z-20">
+                            <button
+                                onclick="toggleEdit('{{ item._id }}')"
+                                class="p-2 bg-gray-900/90 text-white rounded hover:bg-gray-800"
+                                title="Edit"
+                            >
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+                            <button
+                                onclick="deleteContent('{{ item._id }}')"
+                                class="p-2 bg-red-600/90 text-white rounded hover:bg-red-700"
+                                title="Delete"
+                            >
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Edit Form -->
+                    {% if is_admin %}
+                    <div id="edit-form-{{ item._id }}" class="hidden p-4 bg-gray-800/50">
+                        <h4 class="font-semibold text-gray-200 mb-3 text-sm">Edit Content</h4>
+                        <div class="space-y-2">
                             <input
                                 type="text"
                                 id="edit-title-{{ item._id }}"
                                 value="{{ item.title }}"
                                 placeholder="Title"
-                                class="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-600 rounded text-xs sm:text-sm bg-gray-800/50 text-gray-200"
+                                class="w-full px-3 py-2 border border-gray-600 rounded text-sm bg-gray-800/50 text-gray-200 placeholder-gray-500"
                             />
                             {% if item.media_type != 'text' %}
                             <input
-                                type="text"
+                                type="url"
                                 id="edit-url-{{ item._id }}"
                                 value="{{ item.media_url }}"
-                                placeholder="URL"
-                                class="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-600 rounded text-xs sm:text-sm bg-gray-800/50 text-gray-200"
+                                placeholder="Media URL"
+                                class="w-full px-3 py-2 border border-gray-600 rounded text-sm bg-gray-800/50 text-gray-200 placeholder-gray-500"
                             />
                             {% endif %}
                             <textarea
                                 id="edit-caption-{{ item._id }}"
-                                placeholder="Caption"
-                                class="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-600 rounded h-16 sm:h-20 resize-y text-xs sm:text-sm bg-gray-800/50 text-gray-200"
+                                placeholder="Caption/Text"
+                                class="w-full px-3 py-2 border border-gray-600 rounded h-20 text-sm bg-gray-800/50 text-gray-200 placeholder-gray-500"
                             >{{ item.caption or item.text }}</textarea>
                             <div class="flex gap-2">
                                 <button
                                     onclick="saveContentEdit('{{ item._id }}')"
-                                    class="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs sm:text-sm"
+                                    class="px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
                                 >
                                     Save
                                 </button>
                                 <button
                                     onclick="cancelEdit('{{ item._id }}')"
-                                    class="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-gray-600 text-gray-300 rounded hover:bg-gray-400 text-xs sm:text-sm"
+                                    class="px-3 py-1.5 bg-gray-700 text-white rounded hover:bg-gray-600 text-sm"
                                 >
                                     Cancel
                                 </button>
                             </div>
                         </div>
-                        {% endif %}
                     </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
-                {% else %}
-                <div class="text-center py-12 sm:py-20 bg-gray-800/50 rounded-lg">
-                    <div class="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-gray-700 mb-3 sm:mb-4">
-                        <svg class="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                        </svg>
-                    </div>
-                    <h3 class="text-base sm:text-lg font-semibold text-gray-300 mb-2">No content yet</h3>
-                    <p class="text-xs sm:text-sm text-gray-500">{% if is_admin %}Click "Add Content" to add your first item{% else %}Check back later for content{% endif %}</p>
-                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+                <p class="text-gray-500 text-sm sm:text-base">No content in this category yet.</p>
+                {% if is_admin %}
+                <p class="text-gray-600 text-xs sm:text-sm mt-2">Click "Add Content" to get started</p>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
+<!-- Lightbox -->
+<div id="lightbox" class="lightbox" onclick="closeLightbox()">
+    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <img id="lightbox-image" class="lightbox-content" onclick="event.stopPropagation()">
+    <div id="lightbox-info" class="lightbox-info" onclick="event.stopPropagation()">
+        <div id="lightbox-title" class="lightbox-title"></div>
+        <div id="lightbox-caption" class="lightbox-caption"></div>
+    </div>
+</div>
+
 <!-- Folder Modal -->
-<div id="folderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="closeFolderModal()">
-    <div class="bg-gray-900 rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
-        <div class="sticky top-0 bg-gray-900 border-b p-4 sm:p-6 flex justify-between items-center">
+<div id="folderModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-2 sm:p-4" onclick="closeFolderModal()">
+    <div class="bg-gray-900 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto" style="background-color: rgb(18, 18, 20);" onclick="event.stopPropagation()">
+        <div class="sticky top-0 z-10 flex justify-between items-center p-4 sm:p-6 border-b border-gray-700" style="background-color: rgb(18, 18, 20);">
             <div>
                 <h3 id="folderModalTitle" class="text-xl sm:text-2xl font-bold text-gray-200"></h3>
-                <p id="folderModalDesc" class="text-xs sm:text-sm text-gray-500 mt-1"></p>
+                <p id="folderModalDescription" class="text-sm text-gray-500 mt-1"></p>
             </div>
-            <button onclick="closeFolderModal()" class="p-2 hover:bg-gray-800 rounded-lg transition">
-                <svg class="w-5 sm:w-6 h-5 sm:h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <button onclick="closeFolderModal()" class="p-2 hover:bg-gray-700 rounded-lg">
+                <svg class="w-6 h-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
         <div id="folderContent" class="p-4 sm:p-6">
-            <!-- Content will be loaded here -->
+            <div class="text-center py-8">
+                <p class="text-gray-500">Loading...</p>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Edit Folder Modal -->
-<div id="editFolderModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="closeEditFolderModal()">
-    <div class="bg-gray-900 rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6" onclick="event.stopPropagation()">
-        <h3 class="text-lg sm:text-xl font-bold text-gray-200 mb-4">Edit Folder</h3>
-        <div class="space-y-3 sm:space-y-4">
+{% if is_admin %}
+<div id="editFolderModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onclick="closeEditFolderModal()">
+    <div class="bg-gray-900 rounded-lg max-w-md w-full p-6" style="background-color: rgb(18, 18, 20);" onclick="event.stopPropagation()">
+        <h3 class="text-xl font-bold text-gray-200 mb-4">Edit Folder</h3>
+        <input type="hidden" id="editFolderId">
+        <div class="space-y-3">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Folder Name</label>
+                <label class="block text-sm font-medium text-gray-400 mb-1">Folder Name</label>
                 <input
                     type="text"
                     id="editFolderName"
-                    class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200"
+                    class="w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-800/50 text-gray-200 placeholder-gray-500"
                 />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                <label class="block text-sm font-medium text-gray-400 mb-1">Description</label>
                 <textarea
                     id="editFolderDescription"
-                    class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg h-20 sm:h-24 resize-y text-sm sm:text-base bg-gray-800/50 text-gray-200"
+                    class="w-full px-4 py-2 border border-gray-600 rounded-lg h-20 bg-gray-800/50 text-gray-200 placeholder-gray-500"
                 ></textarea>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2 pt-2">
+            <div class="flex gap-2">
                 <button
                     onclick="saveEditFolder()"
-                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-base"
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
                 >
                     Save Changes
                 </button>
                 <button
                     onclick="closeEditFolderModal()"
-                    class="flex-1 px-4 py-2 bg-gray-600 text-gray-300 rounded-lg hover:bg-gray-400 text-sm sm:text-base"
+                    class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
                 >
                     Cancel
                 </button>
@@ -779,45 +740,54 @@
 </div>
 
 <!-- Edit Content Modal (for folder content) -->
-<div id="editContentModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onclick="closeEditContentModal()">
-    <div class="bg-gray-900 rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6" onclick="event.stopPropagation()">
-        <h3 class="text-lg sm:text-xl font-bold text-gray-200 mb-4">Edit Content</h3>
-        <div class="space-y-3 sm:space-y-4">
-            <input type="hidden" id="editContentId">
-            <input type="hidden" id="editContentType">
+<div id="editContentModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onclick="closeEditContentModal()">
+    <div class="bg-gray-900 rounded-lg max-w-md w-full p-6" style="background-color: rgb(18, 18, 20);" onclick="event.stopPropagation()">
+        <h3 class="text-xl font-bold text-gray-200 mb-4">Edit Content</h3>
+        <input type="hidden" id="editContentId">
+        <input type="hidden" id="editContentType">
+        <div class="space-y-3">
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Title (optional)</label>
+                <label class="block text-sm font-medium text-gray-400 mb-1">Title</label>
                 <input
                     type="text"
                     id="editContentTitle"
-                    class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200"
+                    class="w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-800/50 text-gray-200 placeholder-gray-500"
                 />
             </div>
             <div id="editContentUrlField">
-                <label class="block text-sm font-medium text-gray-300 mb-1">Media URL</label>
+                <label class="block text-sm font-medium text-gray-400 mb-1">Media URL</label>
                 <input
-                    type="text"
+                    type="url"
                     id="editContentUrl"
-                    class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg text-sm sm:text-base bg-gray-800/50 text-gray-200"
+                    class="w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-800/50 text-gray-200 placeholder-gray-500"
                 />
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Caption/Text</label>
+                <label class="block text-sm font-medium text-gray-400 mb-1">Caption/Text</label>
                 <textarea
                     id="editContentCaption"
-                    class="w-full px-3 sm:px-4 py-2 border border-gray-600 rounded-lg h-20 sm:h-24 resize-y text-sm sm:text-base bg-gray-800/50 text-gray-200"
+                    class="w-full px-4 py-2 border border-gray-600 rounded-lg h-20 bg-gray-800/50 text-gray-200 placeholder-gray-500"
                 ></textarea>
             </div>
-            <div class="flex flex-col sm:flex-row gap-2 pt-2">
+            <div>
+                <label class="block text-sm font-medium text-gray-400 mb-1">Move to Folder</label>
+                <select id="editContentFolder" class="w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-800/50 text-gray-200">
+                    <option value="">Root (No Folder)</option>
+                    {% for folder in folders %}
+                    <option value="{{ folder._id }}">{{ folder.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-2">
                 <button
                     onclick="saveEditContent()"
-                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-base"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
                     Save Changes
                 </button>
                 <button
                     onclick="closeEditContentModal()"
-                    class="flex-1 px-4 py-2 bg-gray-600 text-gray-300 rounded-lg hover:bg-gray-400 text-sm sm:text-base"
+                    class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
                 >
                     Cancel
                 </button>
@@ -825,16 +795,7 @@
         </div>
     </div>
 </div>
-
-<!-- Lightbox -->
-<div id="lightbox" class="lightbox" onclick="closeLightbox()">
-    <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
-    <img id="lightbox-image" class="lightbox-content" onclick="event.stopPropagation()">
-    <div id="lightbox-info" class="lightbox-info" style="display: none;">
-        <div id="lightbox-title" class="lightbox-title"></div>
-        <div id="lightbox-caption" class="lightbox-caption"></div>
-    </div>
-</div>
+{% endif %}
 
 {% endblock %}
 
@@ -842,7 +803,13 @@
 <script>
     const categoryId = '{{ category._id }}';
     let currentFolderId = null;
-    let editingFolderId = null;
+
+    // Close all admin forms
+    function closeAllForms() {
+        document.getElementById('addContentForm').classList.add('hidden');
+        document.getElementById('bulkUploadForm').classList.add('hidden');
+        document.getElementById('addFolderForm').classList.add('hidden');
+    }
 
     function toggleEditCategory() {
         const form = document.getElementById('editCategoryForm');
@@ -851,30 +818,39 @@
 
     function toggleAddContent() {
         const form = document.getElementById('addContentForm');
-        form.classList.toggle('hidden');
-        if (!form.classList.contains('hidden')) {
-            updateContentForm();
+        const isHidden = form.classList.contains('hidden');
+        closeAllForms();
+        if (isHidden) {
+            form.classList.remove('hidden');
+        }
+    }
+
+    function toggleBulkUpload() {
+        const form = document.getElementById('bulkUploadForm');
+        const isHidden = form.classList.contains('hidden');
+        closeAllForms();
+        if (isHidden) {
+            form.classList.remove('hidden');
         }
     }
 
     function toggleAddFolder() {
         const form = document.getElementById('addFolderForm');
-        form.classList.toggle('hidden');
+        const isHidden = form.classList.contains('hidden');
+        closeAllForms();
+        if (isHidden) {
+            form.classList.remove('hidden');
+        }
     }
 
-    function toggleBulkUpload() {
-        const form = document.getElementById('bulkUploadForm');
-        form.classList.toggle('hidden');
-    }
-
-    function updateContentForm() {
-        const type = document.getElementById('contentType').value;
-        const urlField = document.getElementById('urlField');
+    function toggleContentFields() {
+        const type = document.getElementById('newContentType').value;
+        const urlField = document.getElementById('contentUrlField');
         
         if (type === 'text') {
-            urlField.classList.add('hidden');
+            urlField.style.display = 'none';
         } else {
-            urlField.classList.remove('hidden');
+            urlField.style.display = 'block';
         }
     }
 
@@ -884,15 +860,15 @@
         const accentColor = document.getElementById('categoryColor').value;
         const isFree = document.getElementById('categoryFree').checked;
 
-        if (!/^#[0-9A-F]{6}$/i.test(accentColor)) {
-            alert('Please enter a valid hex color code (e.g., #4F46E5)');
-            return;
-        }
-
         fetch(`/api/categories/${categoryId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, description, accent_color: accentColor, is_free: isFree })
+            body: JSON.stringify({ 
+                name, 
+                description, 
+                accent_color: accentColor, 
+                is_free: isFree 
+            })
         })
         .then(response => response.json())
         .then(data => {
@@ -906,27 +882,9 @@
         });
     }
 
-    function deleteCategory() {
-        if (!confirm('Delete this category and all its content?')) return;
-
-        fetch(`/api/categories/${categoryId}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = '/categories';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to delete category');
-        });
-    }
-
     function addFolder() {
-        const name = document.getElementById('folderName').value;
-        const description = document.getElementById('folderDescription').value;
+        const name = document.getElementById('newFolderName').value;
+        const description = document.getElementById('newFolderDescription').value;
 
         if (!name) {
             alert('Please enter a folder name');
@@ -950,27 +908,27 @@
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Failed to add folder');
+            alert('Failed to create folder');
         });
     }
 
     function editFolder(folderId, name, description) {
-        editingFolderId = folderId;
+        document.getElementById('editFolderId').value = folderId;
         document.getElementById('editFolderName').value = name;
-        document.getElementById('editFolderDescription').value = description;
+        document.getElementById('editFolderDescription').value = description || '';
         document.getElementById('editFolderModal').classList.remove('hidden');
     }
 
+    function closeEditFolderModal() {
+        document.getElementById('editFolderModal').classList.add('hidden');
+    }
+
     function saveEditFolder() {
+        const folderId = document.getElementById('editFolderId').value;
         const name = document.getElementById('editFolderName').value;
         const description = document.getElementById('editFolderDescription').value;
 
-        if (!name) {
-            alert('Please enter a folder name');
-            return;
-        }
-
-        fetch(`/api/folders/${editingFolderId}`, {
+        fetch(`/api/folders/${folderId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, description })
@@ -985,11 +943,6 @@
             console.error('Error:', error);
             alert('Failed to update folder');
         });
-    }
-
-    function closeEditFolderModal() {
-        document.getElementById('editFolderModal').classList.add('hidden');
-        editingFolderId = null;
     }
 
     function deleteFolder(folderId) {
@@ -1012,175 +965,143 @@
 
     function openFolder(folderId) {
         currentFolderId = folderId;
-        const modal = document.getElementById('folderModal');
-        const content = document.getElementById('folderContent');
+        const folder = {{ folders|tojson }}.find(f => f._id === folderId);
         
-        modal.classList.remove('hidden');
-        content.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div></div>';
-        
-        // Fetch folder info and content
+        document.getElementById('folderModalTitle').textContent = folder.name;
+        document.getElementById('folderModalDescription').textContent = folder.description || '';
+        document.getElementById('folderModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+
+        // Fetch folder content
         fetch(`/api/folders/${folderId}/content`)
             .then(response => response.json())
             .then(items => {
-                // Find folder info from page data
-                const folders = {{ folders | tojson }};
-                const folder = folders.find(f => f._id === folderId);
-                
-                if (folder) {
-                    document.getElementById('folderModalTitle').textContent = folder.name;
-                    document.getElementById('folderModalDesc').textContent = folder.description || '';
-                }
+                const container = document.getElementById('folderContent');
                 
                 if (items.length === 0) {
-                    content.innerHTML = `
-                        <div class="text-center py-20 bg-gray-800/50 rounded-lg">
-                            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-700 mb-4">
-                                <svg class="w-8 h-8 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-300 mb-2">No content in this folder</h3>
-                            <p class="text-sm text-gray-500">Add content to this folder using the "Add Content" or "Bulk Upload" buttons</p>
+                    container.innerHTML = `
+                        <div class="text-center py-12">
+                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                            <p class="text-gray-500">This folder is empty</p>
                         </div>
                     `;
                     return;
                 }
-                
+
                 let html = '<div class="content-grid grid gap-3 sm:gap-4">';
-                
                 items.forEach(item => {
-                    html += `<div id="content-${item._id}" class="bg-gray-900 rounded-lg border-2 border-gray-700 overflow-hidden hover:border-indigo-400 transition-all content-card relative group">`;
-                    
+                    html += `
+                        <div id="content-${item._id}" class="content-card group relative bg-gray-800/50 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                    `;
+
                     if (item.media_type === 'image') {
-                        html += `<div class="relative bg-gray-800 media-item" onclick="openLightbox('${item.media_url}', 'image', '${item.title || ''}', '${item.caption || ''}')">
-                            <img src="${item.media_url}" alt="${item.title || ''}" class="w-full h-auto object-contain" loading="lazy">`;
-                        
-                        // Add admin buttons for images
-                        {% if is_admin %}
-                        html += `<div class="absolute top-1 sm:top-2 right-1 sm:right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onclick="event.stopPropagation()">
-                            <button onclick="editFolderContent('${item._id}', '${item.title || ''}', '${item.media_url}', '${item.caption || ''}', '${item.media_type}')" class="p-1 sm:p-1.5 bg-gray-900/90 hover:bg-gray-900 rounded shadow-sm">
-                                <svg class="w-3 sm:w-4 h-3 sm:h-4 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
-                            <button onclick="deleteFolderContent('${item._id}')" class="p-1 sm:p-1.5 bg-gray-900/90 hover:bg-gray-900 rounded shadow-sm">
-                                <svg class="w-3 sm:w-4 h-3 sm:h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        </div>`;
-                        {% endif %}
-                        
-                        if (item.title || item.caption) {
-                            html += `<div class="content-overlay">`;
-                            if (item.title) html += `<div class="content-overlay-title">${item.title}</div>`;
-                            if (item.caption) html += `<div class="content-overlay-caption">${item.caption}</div>`;
-                            html += `</div>`;
-                        }
-                        html += `</div>`;
+                        html += `
+                            <div class="media-item" onclick="openLightbox('${item.media_url}', 'image', '${item.title || ''}', '${item.caption || ''}')">
+                                <img src="${item.media_url}" alt="${item.title || ''}" loading="lazy" class="w-full h-auto">
+                                ${(item.title || item.caption) ? `
+                                    <div class="content-overlay">
+                                        ${item.title ? `<div class="content-overlay-title">${item.title}</div>` : ''}
+                                        ${item.caption ? `<div class="content-overlay-caption">${item.caption}</div>` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
                     } else if (item.media_type === 'video') {
-                        html += `<div class="relative bg-gray-900">
-                            <video src="${item.media_url}" controls class="w-full h-auto"></video>`;
-                        
-                        // Add admin buttons for videos
-                        {% if is_admin %}
-                        html += `<div class="absolute top-1 sm:top-2 right-1 sm:right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onclick="event.stopPropagation()">
-                            <button onclick="editFolderContent('${item._id}', '${item.title || ''}', '${item.media_url}', '${item.caption || ''}', '${item.media_type}')" class="p-1 sm:p-1.5 bg-gray-900/90 hover:bg-gray-900 rounded shadow-sm">
-                                <svg class="w-3 sm:w-4 h-3 sm:h-4 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                            </button>
-                            <button onclick="deleteFolderContent('${item._id}')" class="p-1 sm:p-1.5 bg-gray-900/90 hover:bg-gray-900 rounded shadow-sm">
-                                <svg class="w-3 sm:w-4 h-3 sm:h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        </div>`;
-                        {% endif %}
-                        
-                        if (item.title || item.caption) {
-                            html += `<div class="content-overlay">`;
-                            if (item.title) html += `<div class="content-overlay-title">${item.title}</div>`;
-                            if (item.caption) html += `<div class="content-overlay-caption">${item.caption}</div>`;
-                            html += `</div>`;
-                        }
-                        html += `</div>`;
+                        html += `
+                            <div class="relative">
+                                <video controls class="w-full h-auto">
+                                    <source src="${item.media_url}" type="video/mp4">
+                                </video>
+                                ${(item.title || item.caption) ? `
+                                    <div class="content-overlay">
+                                        ${item.title ? `<div class="content-overlay-title">${item.title}</div>` : ''}
+                                        ${item.caption ? `<div class="content-overlay-caption">${item.caption}</div>` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
                     } else {
-                        html += `<div class="p-3 sm:p-4 min-h-[120px] sm:min-h-[150px] flex flex-col justify-between">
-                            <div>
-                                ${item.title ? `<h4 class="font-semibold text-gray-200 mb-2 text-xs sm:text-sm">${item.title}</h4>` : ''}
-                                <p class="text-xs sm:text-sm text-gray-400">${item.text || item.caption || ''}</p>
-                            </div>`;
-                        
-                        // Add admin buttons for text
-                        {% if is_admin %}
-                        html += `<div class="flex gap-1 justify-end mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="editFolderContent('${item._id}', '${item.title || ''}', '', '${(item.text || item.caption || '').replace(/'/g, "\\'")}', '${item.media_type}')" class="p-1 hover:bg-gray-800 rounded">
-                                <svg class="w-3 sm:w-4 h-3 sm:h-4 text-gray-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        html += `
+                            <div class="p-4">
+                                ${item.title ? `<h4 class="font-semibold text-gray-200 text-base mb-2">${item.title}</h4>` : ''}
+                                <p class="text-gray-400 text-sm whitespace-pre-wrap">${item.text || item.caption || ''}</p>
+                            </div>
+                        `;
+                    }
+
+                    {% if is_admin %}
+                    html += `
+                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition z-20">
+                            <button
+                                onclick="editFolderContent('${item._id}', '${item.title || ''}', '${item.media_url || ''}', '${item.caption || ''}', '${item.media_type}', '${item.folder_id || ''}')"
+                                class="p-2 bg-gray-900/90 text-white rounded hover:bg-gray-800"
+                                title="Edit"
+                            >
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
-                            <button onclick="deleteFolderContent('${item._id}')" class="p-1 hover:bg-red-50 rounded">
-                                <svg class="w-3 sm:w-4 h-3 sm:h-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <button
+                                onclick="deleteFolderContent('${item._id}')"
+                                class="p-2 bg-red-600/90 text-white rounded hover:bg-red-700"
+                                title="Delete"
+                            >
+                                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
                             </button>
-                        </div>`;
-                        {% endif %}
-                        
-                        html += `</div>`;
-                    }
-                    
-                    html += `</div>`;
+                        </div>
+                    `;
+                    {% endif %}
+
+                    html += '</div>';
                 });
-                
                 html += '</div>';
-                content.innerHTML = html;
+
+                container.innerHTML = html;
             })
             .catch(error => {
                 console.error('Error:', error);
-                content.innerHTML = '<div class="text-center py-8 text-red-600">Failed to load folder content</div>';
+                document.getElementById('folderContent').innerHTML = `
+                    <div class="text-center py-12">
+                        <p class="text-red-500">Error loading folder content</p>
+                    </div>
+                `;
             });
     }
 
     function closeFolderModal() {
         document.getElementById('folderModal').classList.add('hidden');
+        document.body.style.overflow = '';
         currentFolderId = null;
     }
 
     function bulkUpload() {
-        const urls = document.getElementById('bulkUrls').value;
+        const urls = document.getElementById('bulkUrls').value.split('\n');
         const mediaType = document.getElementById('bulkMediaType').value;
-        const destination = document.getElementById('bulkDestination').value;
-        
-        if (!urls.trim()) {
-            alert('Please paste at least one URL');
+        const folderId = document.getElementById('bulkContentFolder').value;
+
+        if (urls.length === 0 || !urls[0].trim()) {
+            alert('Please enter at least one URL');
             return;
         }
-        
-        const urlList = urls.split('\n').map(u => u.trim()).filter(u => u);
-        
-        if (urlList.length === 0) {
-            alert('No valid URLs found');
-            return;
-        }
-        
-        if (!confirm(`Upload ${urlList.length} items?`)) return;
-        
+
         fetch('/api/content/bulk', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 category_id: categoryId,
-                folder_id: destination || null,
+                folder_id: folderId || null,
                 media_type: mediaType,
-                urls: urlList
+                urls: urls
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(`Successfully uploaded ${data.created} items${data.failed > 0 ? `. Failed: ${data.failed}` : ''}`);
+                alert(`Successfully uploaded ${data.created} items${data.failed > 0 ? `, ${data.failed} failed` : ''}`);
                 location.reload();
             }
         })
@@ -1191,14 +1112,14 @@
     }
 
     function addContent() {
-        const type = document.getElementById('contentType').value;
-        const title = document.getElementById('contentTitle').value;
-        const url = document.getElementById('contentUrl').value;
-        const caption = document.getElementById('contentCaption').value;
-        const folderId = document.getElementById('contentFolder').value;
+        const type = document.getElementById('newContentType').value;
+        const folderId = document.getElementById('newContentFolder').value;
+        const title = document.getElementById('newContentTitle').value;
+        const url = type !== 'text' ? document.getElementById('newContentUrl').value : '';
+        const caption = document.getElementById('newContentCaption').value;
 
         if (type !== 'text' && !url) {
-            alert('Please provide a URL');
+            alert('Please enter a media URL');
             return;
         }
 
@@ -1357,12 +1278,16 @@
     });
 
     // Functions for editing/deleting content in folders
-    function editFolderContent(contentId, title, url, caption, mediaType) {
+    function editFolderContent(contentId, title, url, caption, mediaType, currentFolder) {
         document.getElementById('editContentId').value = contentId;
         document.getElementById('editContentType').value = mediaType;
         document.getElementById('editContentTitle').value = title;
         document.getElementById('editContentUrl').value = url;
         document.getElementById('editContentCaption').value = caption;
+        
+        // Set current folder in dropdown
+        const folderSelect = document.getElementById('editContentFolder');
+        folderSelect.value = currentFolder || '';
         
         // Hide URL field for text content
         if (mediaType === 'text') {
@@ -1384,6 +1309,7 @@
         const url = document.getElementById('editContentUrl').value;
         const caption = document.getElementById('editContentCaption').value;
         const mediaType = document.getElementById('editContentType').value;
+        const folderId = document.getElementById('editContentFolder').value;
 
         fetch(`/api/content/${contentId}`, {
             method: 'PUT',
@@ -1392,14 +1318,15 @@
                 title: title,
                 media_url: url,
                 caption: caption,
-                text: caption
+                text: caption,
+                folder_id: folderId || null
             })
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
                 closeEditContentModal();
-                // Reload folder content
+                // Reload folder content or page
                 if (currentFolderId) {
                     openFolder(currentFolderId);
                 } else {
