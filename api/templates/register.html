@@ -16,12 +16,15 @@
     {% if beta_mode %}
     <div id="betaKeyModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="relative rounded-2xl shadow-2xl p-8 w-full max-w-md" style="background-color: rgb(18, 18, 20);">
-            <!-- Close button (disabled until key is entered) -->
-            <button id="closeModalBtn" class="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition opacity-50 cursor-not-allowed" disabled>
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            <!-- Login Link -->
+            <div class="absolute top-4 right-4">
+                <a href="/login" class="inline-flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-purple-400 transition">
+                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Login
+                </a>
+            </div>
 
             <!-- Beta Icon -->
             <div class="flex items-center justify-center mb-6">
@@ -282,18 +285,74 @@
         let userEmailAddress = null;
         let betaKeyVerified = {{ 'false' if beta_mode else 'true' }};
 
+        // Cookie helper functions
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + '=';
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
         // Beta Key functionality
         {% if beta_mode %}
-        // Auto-focus and auto-advance beta key inputs
+        // Check if beta key was already verified (stored in cookie)
+        if (getCookie('beta_verified') === 'true') {
+            betaKeyVerified = true;
+            const modal = document.getElementById('betaKeyModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
         const betaKeyInputs = [
             document.getElementById('betaKey1'),
             document.getElementById('betaKey2'),
             document.getElementById('betaKey3')
         ];
 
+        // Handle paste event to distribute pasted text across inputs
         betaKeyInputs.forEach((input, index) => {
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pastedText = (e.clipboardData || window.clipboardData).getData('text')
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9]/g, '')
+                    .substring(0, 12);
+
+                if (pastedText.length >= 12) {
+                    // Distribute the 12 characters across the 3 inputs
+                    betaKeyInputs[0].value = pastedText.substring(0, 4);
+                    betaKeyInputs[1].value = pastedText.substring(4, 8);
+                    betaKeyInputs[2].value = pastedText.substring(8, 12);
+                    betaKeyInputs[2].focus();
+                } else if (pastedText.length > 0) {
+                    // If less than 12 characters, fill from current position
+                    let currentPos = index * 4;
+                    let remaining = pastedText;
+                    
+                    for (let i = index; i < betaKeyInputs.length && remaining.length > 0; i++) {
+                        const chunk = remaining.substring(0, 4);
+                        betaKeyInputs[i].value = chunk;
+                        remaining = remaining.substring(4);
+                        if (remaining.length > 0 && i < betaKeyInputs.length - 1) {
+                            betaKeyInputs[i + 1].focus();
+                        }
+                    }
+                }
+            });
+
             input.addEventListener('input', function(e) {
-                // Convert to uppercase
+                // Convert to uppercase and filter
                 this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
                 
                 // Auto-advance to next input
@@ -310,8 +369,10 @@
             });
         });
 
-        // Focus first input on load
-        betaKeyInputs[0].focus();
+        // Focus first input on load (only if modal is visible)
+        if (document.getElementById('betaKeyModal')) {
+            betaKeyInputs[0].focus();
+        }
 
         async function verifyBetaKey() {
             const key1 = document.getElementById('betaKey1').value;
@@ -340,6 +401,8 @@
 
                 if (data.success) {
                     betaKeyVerified = true;
+                    // Store in cookie for 30 days
+                    setCookie('beta_verified', 'true', 30);
                     document.getElementById('betaKeyModal').remove();
                 } else {
                     errorText.textContent = data.message || 'Invalid beta key';

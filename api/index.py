@@ -35,7 +35,6 @@ SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
 FROM_EMAIL = os.environ.get('FROM_EMAIL', SMTP_USERNAME)
 
-
 def send_email(to_email, subject, body):
     """Send email using SMTP"""
     try:
@@ -57,11 +56,9 @@ def send_email(to_email, subject, body):
         print(f"Email error: {e}")
         return False
 
-
 def generate_verification_code():
     """Generate a 6-digit verification code"""
     return ''.join([str(secrets.randbelow(10)) for _ in range(6)])
-
 
 def create_verification_code(user_id, email, code_type='email_verification'):
     """Create and store a verification code"""
@@ -79,7 +76,6 @@ def create_verification_code(user_id, email, code_type='email_verification'):
 
     return code
 
-
 def verify_code(email, code, code_type='email_verification'):
     """Verify a code and mark it as used"""
     verification = verification_codes_collection.find_one({
@@ -87,19 +83,16 @@ def verify_code(email, code, code_type='email_verification'):
         'code': code,
         'type': code_type,
         'used': False,
-        'expires_at': {
-            '$gt': datetime.utcnow()
-        }
+        'expires_at': {'$gt': datetime.utcnow()}
     })
 
     if verification:
-        verification_codes_collection.update_one({'_id': verification['_id']},
-                                                 {'$set': {
-                                                     'used': True
-                                                 }})
+        verification_codes_collection.update_one(
+            {'_id': verification['_id']},
+            {'$set': {'used': True}}
+        )
         return True
     return False
-
 
 # Helper function to get accessible categories for sidebar
 def get_accessible_categories():
@@ -117,14 +110,15 @@ def get_accessible_categories():
     # Separate into paid and free
     paid_categories = sorted(
         [c for c in all_categories if not c.get('is_free', False)],
-        key=lambda x: x['name'].lower())
+        key=lambda x: x['name'].lower()
+    )
     free_categories = sorted(
         [c for c in all_categories if c.get('is_free', False)],
-        key=lambda x: x['name'].lower())
+        key=lambda x: x['name'].lower()
+    )
 
     # Combine: paid first, then free
     return paid_categories + free_categories
-
 
 # Context processor to make categories available in all templates
 @app.context_processor
@@ -133,21 +127,16 @@ def inject_categories():
         return {'sidebar_categories': get_accessible_categories()}
     return {'sidebar_categories': []}
 
-
 # Authentication decorator
 def login_required(f):
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
         return f(*args, **kwargs)
-
     return decorated_function
 
-
 def admin_required(f):
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
@@ -156,9 +145,7 @@ def admin_required(f):
         if not user or not user.get('is_admin', False):
             return jsonify({'error': 'Admin access required'}), 403
         return f(*args, **kwargs)
-
     return decorated_function
-
 
 # Routes
 @app.route('/')
@@ -177,7 +164,6 @@ def index():
 
     return render_template('index.html', page=page_data)
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -187,38 +173,47 @@ def login():
 
         # Search by username or email
         user = users_collection.find_one({
-            '$or': [{
-                'username': username_or_email
-            }, {
-                'email': username_or_email
-            }]
+            '$or': [
+                {'username': username_or_email},
+                {'email': username_or_email}
+            ]
         })
 
         if user:
             # Check if email is verified
             if not user.get('email_verified', False):
-                return jsonify({
-                    'success': False,
-                    'message': 'Please verify your email first'
-                }), 401
+                return jsonify({'success': False, 'message': 'Please verify your email first'}), 401
 
             if check_password_hash(user['password'], password):
                 session['user_id'] = str(user['_id'])
                 session['username'] = user['username']
                 session['is_admin'] = user.get('is_admin', False)
                 session['is_subscribed'] = user.get('is_subscribed', False)
-                return jsonify({
-                    'success': True,
-                    'is_admin': user.get('is_admin', False)
-                })
+                return jsonify({'success': True, 'is_admin': user.get('is_admin', False)})
 
-        return jsonify({
-            'success': False,
-            'message': 'Invalid credentials'
-        }), 401
+        return jsonify({'success': False, 'message': 'Invalid credentials'}), 401
 
     return render_template('login.html')
 
+@app.route('/verify-beta-key', methods=['POST'])
+def verify_beta_key():
+    """Verify beta key against stored secret"""
+    data = request.json
+    provided_key = data.get('beta_key', '').strip().upper()
+
+    # Get beta key from secrets collection
+    beta_secret = db['secrets'].find_one({'key': 'beta_key'})
+
+    if not beta_secret:
+        return jsonify({'success': False, 'message': 'Beta system not configured'}), 500
+
+    correct_key = beta_secret.get('value', '').strip().upper()
+
+    if provided_key == correct_key:
+        session['beta_verified'] = True
+        return jsonify({'success': True})
+    else:
+        return jsonify({'success': False, 'message': 'Invalid beta key'}), 401
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -228,19 +223,20 @@ def register():
         email = data.get('email')
         password = data.get('password')
 
+        # Check beta mode from secrets
+        beta_config = db['secrets'].find_one({'key': 'beta_mode'})
+        beta_mode = beta_config and beta_config.get('value', 'false').lower() == 'true'
+
+        if beta_mode and not session.get('beta_verified', False):
+            return jsonify({'success': False, 'message': 'Beta key verification required'}), 403
+
         # Check if username already exists
         if users_collection.find_one({'username': username}):
-            return jsonify({
-                'success': False,
-                'message': 'Username already exists'
-            }), 400
+            return jsonify({'success': False, 'message': 'Username already exists'}), 400
 
         # Check if email already exists
         if users_collection.find_one({'email': email}):
-            return jsonify({
-                'success': False,
-                'message': 'Email already exists'
-            }), 400
+            return jsonify({'success': False, 'message': 'Email already exists'}), 400
 
         # Create new user
         user_data = {
@@ -285,13 +281,12 @@ def register():
         else:
             # If email fails, delete the user
             users_collection.delete_one({'_id': ObjectId(user_id)})
-            return jsonify({
-                'success': False,
-                'message': 'Failed to send verification email'
-            }), 500
+            return jsonify({'success': False, 'message': 'Failed to send verification email'}), 500
 
-    return render_template('register.html')
-
+    # GET request - show registration form
+    beta_config = db['secrets'].find_one({'key': 'beta_mode'})
+    beta_mode = beta_config and beta_config.get('value', 'false').lower() == 'true'
+    return render_template('register.html', beta_mode=beta_mode)
 
 @app.route('/verify-email', methods=['POST'])
 def verify_email():
@@ -304,10 +299,10 @@ def verify_email():
         return jsonify({'success': False, 'message': 'User not found'}), 404
 
     if verify_code(user['email'], code, 'email_verification'):
-        users_collection.update_one({'_id': ObjectId(user_id)},
-                                    {'$set': {
-                                        'email_verified': True
-                                    }})
+        users_collection.update_one(
+            {'_id': ObjectId(user_id)},
+            {'$set': {'email_verified': True}}
+        )
 
         # Auto-login after verification
         session['user_id'] = user_id
@@ -317,11 +312,7 @@ def verify_email():
 
         return jsonify({'success': True})
 
-    return jsonify({
-        'success': False,
-        'message': 'Invalid or expired code'
-    }), 400
-
+    return jsonify({'success': False, 'message': 'Invalid or expired code'}), 400
 
 @app.route('/resend-verification', methods=['POST'])
 def resend_verification():
@@ -333,14 +324,10 @@ def resend_verification():
         return jsonify({'success': False, 'message': 'User not found'}), 404
 
     if user.get('email_verified', False):
-        return jsonify({
-            'success': False,
-            'message': 'Email already verified'
-        }), 400
+        return jsonify({'success': False, 'message': 'Email already verified'}), 400
 
     # Generate new code
-    code = create_verification_code(user_id, user['email'],
-                                    'email_verification')
+    code = create_verification_code(user_id, user['email'], 'email_verification')
 
     # Send verification email
     subject = "Verify Your Email - Effexor Hub"
@@ -366,7 +353,6 @@ def resend_verification():
         return jsonify({'success': True})
 
     return jsonify({'success': False, 'message': 'Failed to send email'}), 500
-
 
 @app.route('/forgot-password', methods=['POST'])
 def forgot_password():
@@ -405,7 +391,6 @@ def forgot_password():
     send_email(email, subject, body)
     return jsonify({'success': True})
 
-
 @app.route('/reset-password', methods=['POST'])
 def reset_password():
     data = request.json
@@ -420,29 +405,22 @@ def reset_password():
     if verify_code(email, code, 'password_reset'):
         users_collection.update_one(
             {'_id': user['_id']},
-            {'$set': {
-                'password': generate_password_hash(new_password)
-            }})
+            {'$set': {'password': generate_password_hash(new_password)}}
+        )
         return jsonify({'success': True})
 
-    return jsonify({
-        'success': False,
-        'message': 'Invalid or expired code'
-    }), 400
-
+    return jsonify({'success': False, 'message': 'Invalid or expired code'}), 400
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
 
-
 @app.route('/settings')
 @login_required
 def settings():
     user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
     return render_template('settings.html', user=user)
-
 
 @app.route('/settings/change-password', methods=['POST'])
 @login_required
@@ -456,16 +434,11 @@ def change_password():
     if verify_code(user['email'], code, 'password_change'):
         users_collection.update_one(
             {'_id': user['_id']},
-            {'$set': {
-                'password': generate_password_hash(new_password)
-            }})
+            {'$set': {'password': generate_password_hash(new_password)}}
+        )
         return jsonify({'success': True})
 
-    return jsonify({
-        'success': False,
-        'message': 'Invalid or expired code'
-    }), 400
-
+    return jsonify({'success': False, 'message': 'Invalid or expired code'}), 400
 
 @app.route('/settings/send-change-password-code', methods=['POST'])
 @login_required
@@ -473,8 +446,7 @@ def send_change_password_code():
     user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
 
     # Generate code
-    code = create_verification_code(session['user_id'], user['email'],
-                                    'password_change')
+    code = create_verification_code(session['user_id'], user['email'], 'password_change')
 
     # Send email
     subject = "Password Change Verification - Effexor Hub"
@@ -501,7 +473,6 @@ def send_change_password_code():
 
     return jsonify({'success': False, 'message': 'Failed to send email'}), 500
 
-
 @app.route('/settings/delete-account', methods=['POST'])
 @login_required
 def delete_account():
@@ -517,11 +488,7 @@ def delete_account():
         session.clear()
         return jsonify({'success': True})
 
-    return jsonify({
-        'success': False,
-        'message': 'Invalid or expired code'
-    }), 400
-
+    return jsonify({'success': False, 'message': 'Invalid or expired code'}), 400
 
 @app.route('/settings/send-delete-account-code', methods=['POST'])
 @login_required
@@ -529,8 +496,7 @@ def send_delete_account_code():
     user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
 
     # Generate code
-    code = create_verification_code(session['user_id'], user['email'],
-                                    'account_deletion')
+    code = create_verification_code(session['user_id'], user['email'], 'account_deletion')
 
     # Send email
     subject = "Account Deletion Verification - Effexor Hub"
@@ -558,7 +524,6 @@ def send_delete_account_code():
 
     return jsonify({'success': False, 'message': 'Failed to send email'}), 500
 
-
 @app.route('/categories')
 @login_required
 def categories():
@@ -570,17 +535,18 @@ def categories():
     all_categories = list(categories_collection.find())
     paid_categories = sorted(
         [c for c in all_categories if not c.get('is_free', False)],
-        key=lambda x: x['name'].lower())
+        key=lambda x: x['name'].lower()
+    )
     free_categories = sorted(
         [c for c in all_categories if c.get('is_free', False)],
-        key=lambda x: x['name'].lower())
+        key=lambda x: x['name'].lower()
+    )
     categories = paid_categories + free_categories
 
-    return render_template('categories.html',
-                           categories=categories,
-                           is_admin=is_admin,
-                           is_subscribed=is_subscribed)
-
+    return render_template('categories.html', 
+                         categories=categories, 
+                         is_admin=is_admin,
+                         is_subscribed=is_subscribed)
 
 @app.route('/category/<category_id>')
 @login_required
@@ -595,8 +561,7 @@ def category_detail(category_id):
         return "Category not found", 404
 
     # Check access
-    if not is_admin and not is_subscribed and not category.get(
-            'is_free', False):
+    if not is_admin and not is_subscribed and not category.get('is_free', False):
         return "Subscription required", 403
 
     # Fetch folders for this category and convert ObjectId to string
@@ -605,26 +570,30 @@ def category_detail(category_id):
         folder['_id'] = str(folder['_id'])
 
     # Fetch content for this category (root level only - no folder_id)
-    content_items = list(
-        content_collection.find({
-            'category_id': category_id,
-            'folder_id': None
-        }))
+    content_items = list(content_collection.find({'category_id': category_id, 'folder_id': None}))
 
-    return render_template('category_detail.html',
-                           category=category,
-                           content_items=content_items,
-                           folders=folders,
-                           is_admin=is_admin)
-
+    return render_template('category_detail.html', 
+                         category=category, 
+                         content_items=content_items,
+                         folders=folders,
+                         is_admin=is_admin)
 
 @app.route('/admin')
 @admin_required
 def admin_panel():
     users = list(users_collection.find())
     categories = list(categories_collection.find())
-    return render_template('admin.html', users=users, categories=categories)
 
+    # Get beta settings
+    beta_mode = db['secrets'].find_one({'key': 'beta_mode'})
+    beta_key = db['secrets'].find_one({'key': 'beta_key'})
+
+    beta_settings = {
+        'mode': beta_mode and beta_mode.get('value', 'false').lower() == 'true',
+        'key': beta_key.get('value', '') if beta_key else ''
+    }
+
+    return render_template('admin.html', users=users, categories=categories, beta_settings=beta_settings)
 
 # API Routes
 @app.route('/api/users', methods=['GET'])
@@ -635,7 +604,6 @@ def get_users():
         user['_id'] = str(user['_id'])
         user.pop('password', None)
     return jsonify(users)
-
 
 @app.route('/api/users/<user_id>', methods=['PUT'])
 @admin_required
@@ -648,18 +616,18 @@ def update_user(user_id):
     if 'is_admin' in data:
         update_data['is_admin'] = data['is_admin']
 
-    users_collection.update_one({'_id': ObjectId(user_id)},
-                                {'$set': update_data})
+    users_collection.update_one(
+        {'_id': ObjectId(user_id)},
+        {'$set': update_data}
+    )
 
     return jsonify({'success': True})
-
 
 @app.route('/api/users/<user_id>', methods=['DELETE'])
 @admin_required
 def delete_user(user_id):
     users_collection.delete_one({'_id': ObjectId(user_id)})
     return jsonify({'success': True})
-
 
 @app.route('/api/categories', methods=['GET'])
 @login_required
@@ -668,7 +636,6 @@ def get_categories():
     for category in categories:
         category['_id'] = str(category['_id'])
     return jsonify(categories)
-
 
 @app.route('/api/categories', methods=['POST'])
 @admin_required
@@ -685,7 +652,6 @@ def create_category():
     result = categories_collection.insert_one(category_data)
     return jsonify({'success': True, 'id': str(result.inserted_id)})
 
-
 @app.route('/api/categories/<category_id>', methods=['PUT'])
 @admin_required
 def update_category(category_id):
@@ -701,11 +667,12 @@ def update_category(category_id):
     if 'accent_color' in data:
         update_data['accent_color'] = data['accent_color']
 
-    categories_collection.update_one({'_id': ObjectId(category_id)},
-                                     {'$set': update_data})
+    categories_collection.update_one(
+        {'_id': ObjectId(category_id)},
+        {'$set': update_data}
+    )
 
     return jsonify({'success': True})
-
 
 @app.route('/api/categories/<category_id>', methods=['DELETE'])
 @admin_required
@@ -716,7 +683,6 @@ def delete_category(category_id):
     # Delete all content in this category
     content_collection.delete_many({'category_id': category_id})
     return jsonify({'success': True})
-
 
 # Folder API Routes
 @app.route('/api/folders', methods=['POST'])
@@ -733,7 +699,6 @@ def create_folder():
     result = folders_collection.insert_one(folder_data)
     return jsonify({'success': True, 'id': str(result.inserted_id)})
 
-
 @app.route('/api/folders/<folder_id>', methods=['PUT'])
 @admin_required
 def update_folder(folder_id):
@@ -745,11 +710,12 @@ def update_folder(folder_id):
     if 'description' in data:
         update_data['description'] = data['description']
 
-    folders_collection.update_one({'_id': ObjectId(folder_id)},
-                                  {'$set': update_data})
+    folders_collection.update_one(
+        {'_id': ObjectId(folder_id)},
+        {'$set': update_data}
+    )
 
     return jsonify({'success': True})
-
 
 @app.route('/api/folders/<folder_id>', methods=['DELETE'])
 @admin_required
@@ -759,7 +725,6 @@ def delete_folder(folder_id):
     content_collection.delete_many({'folder_id': folder_id})
     return jsonify({'success': True})
 
-
 @app.route('/api/folders/<folder_id>/content', methods=['GET'])
 @login_required
 def get_folder_content(folder_id):
@@ -767,7 +732,6 @@ def get_folder_content(folder_id):
     for item in content_items:
         item['_id'] = str(item['_id'])
     return jsonify(content_items)
-
 
 # Content API Routes
 @app.route('/api/content', methods=['POST'])
@@ -787,7 +751,6 @@ def create_content():
 
     result = content_collection.insert_one(content_data)
     return jsonify({'success': True, 'id': str(result.inserted_id)})
-
 
 @app.route('/api/content/bulk', methods=['POST'])
 @admin_required
@@ -823,12 +786,11 @@ def bulk_create_content():
             failed_urls.append(url)
 
     return jsonify({
-        'success': True,
+        'success': True, 
         'created': created_count,
         'failed': len(failed_urls),
         'failed_urls': failed_urls
     })
-
 
 @app.route('/api/content/<content_id>', methods=['PUT'])
 @admin_required
@@ -836,24 +798,22 @@ def update_content(content_id):
     data = request.json
     update_data = {}
 
-    for field in [
-            'title', 'text', 'media_url', 'media_type', 'caption', 'folder_id'
-    ]:
+    for field in ['title', 'text', 'media_url', 'media_type', 'caption', 'folder_id']:
         if field in data:
             update_data[field] = data[field]
 
-    content_collection.update_one({'_id': ObjectId(content_id)},
-                                  {'$set': update_data})
+    content_collection.update_one(
+        {'_id': ObjectId(content_id)},
+        {'$set': update_data}
+    )
 
     return jsonify({'success': True})
-
 
 @app.route('/api/content/<content_id>', methods=['DELETE'])
 @admin_required
 def delete_content(content_id):
     content_collection.delete_one({'_id': ObjectId(content_id)})
     return jsonify({'success': True})
-
 
 @app.route('/api/pages/<page_name>', methods=['GET'])
 def get_page(page_name):
@@ -862,15 +822,49 @@ def get_page(page_name):
         page['_id'] = str(page['_id'])
     return jsonify(page)
 
-
 @app.route('/api/pages/<page_name>', methods=['PUT'])
 @admin_required
 def update_page(page_name):
     data = request.json
-    pages_collection.update_one({'page_name': page_name}, {'$set': data},
-                                upsert=True)
+    pages_collection.update_one(
+        {'page_name': page_name},
+        {'$set': data},
+        upsert=True
+    )
     return jsonify({'success': True})
 
+# Beta Settings API Routes
+@app.route('/api/beta-settings/mode', methods=['PUT'])
+@admin_required
+def update_beta_mode():
+    data = request.json
+    enabled = data.get('enabled', False)
+
+    db['secrets'].update_one(
+        {'key': 'beta_mode'},
+        {'$set': {'value': 'true' if enabled else 'false'}},
+        upsert=True
+    )
+
+    return jsonify({'success': True})
+
+@app.route('/api/beta-settings/key', methods=['PUT'])
+@admin_required
+def update_beta_key():
+    data = request.json
+    key = data.get('key', '').strip().upper()
+
+    # Validate key format
+    if len(key) != 12 or not key.isalnum():
+        return jsonify({'success': False, 'message': 'Invalid key format'}), 400
+
+    db['secrets'].update_one(
+        {'key': 'beta_key'},
+        {'$set': {'value': key}},
+        upsert=True
+    )
+
+    return jsonify({'success': True})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

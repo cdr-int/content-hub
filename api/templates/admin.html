@@ -56,6 +56,75 @@
             </div>
         </div>
 
+        <!-- Beta Settings -->
+        <div class="mb-6 sm:mb-8">
+            <h3 class="text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-gray-300">Beta Settings</h3>
+            <div class="bg-gray-800/50 rounded-lg p-4">
+                <div class="space-y-4">
+                    <!-- Beta Mode Toggle -->
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-gray-200">Beta Mode</p>
+                            <p class="text-xs text-gray-500">Require beta key for new registrations</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input 
+                                type="checkbox" 
+                                id="betaModeToggle"
+                                {% if beta_settings.mode %}checked{% endif %}
+                                onchange="toggleBetaMode(this.checked)"
+                                class="sr-only peer"
+                            />
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+
+                    <!-- Beta Key Input -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-300 mb-2">Beta Key (12 characters)</label>
+                        <div class="flex gap-2">
+                            <input
+                                type="text"
+                                id="betaKeyInput"
+                                maxlength="12"
+                                value="{{ beta_settings.key }}"
+                                class="flex-1 px-4 py-2 border border-gray-600 rounded-lg bg-gray-800/50 text-gray-200 placeholder-gray-500 font-mono uppercase"
+                                placeholder="XXXXXXXXXXXX"
+                            />
+                            <button
+                                onclick="updateBetaKey()"
+                                class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                            >
+                                Update Key
+                            </button>
+                            <button
+                                onclick="generateBetaKey()"
+                                class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition"
+                                title="Generate random key"
+                            >
+                                <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Use alphanumeric characters (A-Z, 0-9)</p>
+                    </div>
+
+                    <!-- Status Display -->
+                    <div class="p-3 rounded-lg {% if beta_settings.mode %}bg-purple-500/20 border border-purple-500/30{% else %}bg-gray-700/50 border border-gray-600{% endif %}">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 {% if beta_settings.mode %}text-purple-400{% else %}text-gray-500{% endif %}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p class="text-sm {% if beta_settings.mode %}text-purple-400{% else %}text-gray-400{% endif %}">
+                                Beta mode is currently <strong>{% if beta_settings.mode %}ENABLED{% else %}DISABLED{% endif %}</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Category Management -->
         <div class="mb-8">
             <h3 class="text-lg font-semibold mb-3 text-gray-300">Category Management</h3>
@@ -280,6 +349,74 @@
             alert('Failed to delete category');
         });
     }
+
+    // Beta Settings Functions
+    function toggleBetaMode(enabled) {
+        fetch('/api/beta-settings/mode', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ enabled: enabled })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to update beta mode');
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update beta mode');
+        });
+    }
+
+    function updateBetaKey() {
+        const key = document.getElementById('betaKeyInput').value.trim().toUpperCase();
+        
+        if (key.length !== 12) {
+            alert('Beta key must be exactly 12 characters');
+            return;
+        }
+
+        if (!/^[A-Z0-9]{12}$/.test(key)) {
+            alert('Beta key must contain only letters and numbers');
+            return;
+        }
+
+        fetch('/api/beta-settings/key', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: key })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Beta key updated successfully');
+            } else {
+                alert('Failed to update beta key');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update beta key');
+        });
+    }
+
+    function generateBetaKey() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let key = '';
+        for (let i = 0; i < 12; i++) {
+            key += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        document.getElementById('betaKeyInput').value = key;
+    }
+
+    // Auto-format beta key input
+    document.getElementById('betaKeyInput')?.addEventListener('input', function(e) {
+        this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 12);
+    });
 
     // Update color preview
     document.addEventListener('DOMContentLoaded', function() {
