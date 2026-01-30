@@ -744,8 +744,8 @@ https://example.com/image3.jpg"
 
 <!-- Folder Modal -->
 <div id="folderModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-2 sm:p-4" onclick="closeFolderModal()">
-    <div class="bg-gray-900 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto" style="background-color: rgb(18, 18, 20);" onclick="event.stopPropagation()">
-        <div class="sticky top-0 z-10 flex justify-between items-center p-4 sm:p-6 border-b border-gray-700" style="background-color: rgb(18, 18, 20);">
+    <div class="bg-gray-900 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col" style="background-color: rgb(18, 18, 20);" onclick="event.stopPropagation()">
+        <div class="sticky top-0 z-10 flex justify-between items-center p-4 sm:p-6 border-b border-gray-700 flex-shrink-0" style="background-color: rgb(18, 18, 20);">
             <div>
                 <h3 id="folderModalTitle" class="text-xl sm:text-2xl font-bold text-gray-200"></h3>
                 <p id="folderModalDescription" class="text-sm text-gray-500 mt-1"></p>
@@ -756,7 +756,7 @@ https://example.com/image3.jpg"
                 </svg>
             </button>
         </div>
-        <div id="folderContent" class="p-4 sm:p-6">
+        <div id="folderContent" class="p-4 sm:p-6 overflow-y-auto flex-1">
             <div class="text-center py-8">
                 <p class="text-gray-500">Loading...</p>
             </div>
@@ -1154,6 +1154,42 @@ https://example.com/image3.jpg"
 
                 container.innerHTML = html;
                 
+                // Setup scroll listener to hide controls when content is under header
+                const folderContentContainer = document.getElementById('folderContent');
+                const folderModalHeader = document.querySelector('#folderModal .sticky');
+                
+                function updateControlsVisibility() {
+                    const headerRect = folderModalHeader.getBoundingClientRect();
+                    const headerBottom = headerRect.bottom;
+                    
+                    // Get all content cards
+                    const contentCards = folderContentContainer.querySelectorAll('.content-card');
+                    
+                    contentCards.forEach(card => {
+                        const cardRect = card.getBoundingClientRect();
+                        const controls = card.querySelectorAll('.favorite-btn, .absolute.top-2.right-2');
+                        
+                        // If the top of the card is under the header, hide controls
+                        if (cardRect.top < headerBottom) {
+                            controls.forEach(control => {
+                                control.style.opacity = '0';
+                                control.style.pointerEvents = 'none';
+                            });
+                        } else {
+                            controls.forEach(control => {
+                                control.style.opacity = '';
+                                control.style.pointerEvents = '';
+                            });
+                        }
+                    });
+                }
+                
+                // Add scroll listener
+                folderContentContainer.addEventListener('scroll', updateControlsVisibility);
+                
+                // Initial check
+                updateControlsVisibility();
+                
                 // Check favorite status for all content in folder
                 const favoriteButtons = container.querySelectorAll('.favorite-btn');
                 favoriteButtons.forEach(button => {
@@ -1184,7 +1220,21 @@ https://example.com/image3.jpg"
     }
 
     function closeFolderModal() {
-        document.getElementById('folderModal').classList.add('hidden');
+        const folderContentContainer = document.getElementById('folderContent');
+        const folderModal = document.getElementById('folderModal');
+        
+        // Remove scroll listener by cloning and replacing the element
+        const newContent = folderContentContainer.cloneNode(false);
+        newContent.id = 'folderContent';
+        newContent.className = folderContentContainer.className;
+        newContent.innerHTML = `
+            <div class="text-center py-8">
+                <p class="text-gray-500">Loading...</p>
+            </div>
+        `;
+        folderContentContainer.parentNode.replaceChild(newContent, folderContentContainer);
+        
+        folderModal.classList.add('hidden');
         document.body.style.overflow = '';
         currentFolderId = null;
     }
@@ -1505,6 +1555,21 @@ https://example.com/image3.jpg"
                     // Add animation
                     button.classList.add('scale-125');
                     setTimeout(() => button.classList.remove('scale-125'), 200);
+                    
+                    // Update favorites counter if function exists
+                    if (typeof window.updateFavoritesCounter === 'function') {
+                        window.updateFavoritesCounter();
+                    }
+                } else if (data.limit_reached) {
+                    // Show favorites limit modal
+                    if (typeof window.showFavoritesLimitModal === 'function') {
+                        window.showFavoritesLimitModal();
+                    } else {
+                        // Fallback to alert if modal function not available
+                        alert(data.message || 'You have reached the maximum of 50 favorites. Upgrade to premium for unlimited favorites!');
+                    }
+                } else {
+                    console.error('Error toggling favorite:', data.error);
                 }
             })
             .catch(error => console.error('Error:', error));

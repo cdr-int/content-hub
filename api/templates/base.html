@@ -33,6 +33,14 @@
                 </a>
             </div>
             <div class="flex items-center gap-2 sm:gap-4">
+                <!-- Favorites Counter -->
+                <div id="favoritesCounter" class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-lg border border-gray-700">
+                    <svg class="w-4 h-4 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                    <span id="favoritesCountDisplay" class="text-sm font-semibold text-white">--/--</span>
+                </div>
+                
                 <!-- Timer Display for non-subscribed users -->
                 {% if not session.get('is_subscribed') and not session.get('is_admin') %}
                 <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-lg border border-gray-700">
@@ -95,6 +103,17 @@
                     </div>
                 </div>
                 {% endif %}
+
+                <!-- Favorites Counter (Mobile) -->
+                <div class="sm:hidden mb-4 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span class="text-sm text-gray-400">Favorites:</span>
+                        <span id="favoritesCountDisplayMobile" class="text-sm font-semibold text-white">--/--</span>
+                    </div>
+                </div>
 
                 <!-- Navigation Links -->
                 <div class="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
@@ -271,6 +290,85 @@
     {% endif %}
     {% endif %}
 
+    <!-- Favorites Limit Modal -->
+    {% if not session.get('is_subscribed') and not session.get('is_admin') %}
+    <div id="favoritesLimitModal" class="hidden fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4" style="z-index: 9999;">
+        <div class="bg-gray-900 rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-800" onclick="event.stopPropagation()">
+            <div class="text-center">
+                <!-- Icon -->
+                <div class="mx-auto w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </div>
+                
+                <!-- Title -->
+                <h3 class="text-2xl font-bold text-white mb-2">Favorites Limit Reached!</h3>
+                <p class="text-gray-400 mb-6">You've reached your limit of 50 favorites. Upgrade to premium for unlimited favorites!</p>
+                
+                <!-- Current Status -->
+                <div class="bg-gray-800 rounded-lg p-4 mb-4">
+                    <div class="flex items-center justify-center gap-3 mb-3">
+                        <div class="text-center">
+                            <p class="text-3xl font-bold text-red-400">50/50</p>
+                            <p class="text-xs text-gray-500 mt-1">Current Limit</p>
+                        </div>
+                        <svg class="w-6 h-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                        <div class="text-center">
+                            <p class="text-3xl font-bold text-green-400">50/∞</p>
+                            <p class="text-xs text-gray-500 mt-1">With Premium</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Benefits -->
+                <div class="bg-gray-800 rounded-lg p-4 mb-6 text-left">
+                    <p class="text-sm font-semibold text-gray-300 mb-2">Premium Benefits:</p>
+                    <ul class="space-y-2 text-sm text-gray-400">
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Unlimited favorites
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Unlimited access time
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Access to all premium categories
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Ad-free experience
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- CTA Buttons -->
+                <a href="/premium" class="block w-full py-3 px-6 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition mb-3">
+                    Upgrade to Premium
+                </a>
+                
+                <button onclick="closeFavoritesLimitModal()" class="block w-full py-3 px-6 bg-gray-800 text-gray-300 font-semibold rounded-lg hover:bg-gray-700 transition">
+                    Maybe Later
+                </button>
+                
+                <p class="text-xs text-gray-500 mt-4">Remove some favorites to add new ones</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Main Content -->
     <main>
         {% block content %}{% endblock %}
@@ -281,6 +379,26 @@
             const overlay = document.getElementById('menuOverlay');
             overlay.classList.toggle('hidden');
         }
+
+        function showFavoritesLimitModal() {
+            const modal = document.getElementById('favoritesLimitModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeFavoritesLimitModal() {
+            const modal = document.getElementById('favoritesLimitModal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Make function globally available
+        window.showFavoritesLimitModal = showFavoritesLimitModal;
+        window.closeFavoritesLimitModal = closeFavoritesLimitModal;
 
         function filterSidebarCategories() {
             const searchTerm = document.getElementById('sidebarSearch').value.toLowerCase();
@@ -506,6 +624,79 @@
             });
         })();
         {% endif %}
+    </script>
+
+    <!-- Favorites Counter Script -->
+    <script>
+        (function() {
+            function updateFavoritesCounter() {
+                fetch('/api/favorites/count')
+                    .then(response => response.json())
+                    .then(data => {
+                        const count = data.count || 0;
+                        const isSubscribed = data.is_subscribed || false;
+                        const limit = data.limit;
+
+                        // Format display text
+                        let displayText;
+                        if (isSubscribed) {
+                            // Subscribed users: show count/infinity
+                            displayText = `${count}/∞`;
+                        } else {
+                            // Non-subscribed users: show count/50
+                            displayText = `${count}/${limit || 50}`;
+                        }
+
+                        // Update desktop display
+                        const desktopDisplay = document.getElementById('favoritesCountDisplay');
+                        if (desktopDisplay) {
+                            desktopDisplay.textContent = displayText;
+                            
+                            // Change color if approaching limit (non-subscribed users)
+                            if (!isSubscribed && count >= 45) {
+                                desktopDisplay.classList.add('text-yellow-400');
+                                desktopDisplay.classList.remove('text-white');
+                            } else if (!isSubscribed && count >= 50) {
+                                desktopDisplay.classList.add('text-red-400');
+                                desktopDisplay.classList.remove('text-white', 'text-yellow-400');
+                            }
+                        }
+
+                        // Update mobile display
+                        const mobileDisplay = document.getElementById('favoritesCountDisplayMobile');
+                        if (mobileDisplay) {
+                            mobileDisplay.textContent = displayText;
+                            
+                            // Change color if approaching limit (non-subscribed users)
+                            if (!isSubscribed && count >= 45) {
+                                mobileDisplay.classList.add('text-yellow-400');
+                                mobileDisplay.classList.remove('text-white');
+                            } else if (!isSubscribed && count >= 50) {
+                                mobileDisplay.classList.add('text-red-400');
+                                mobileDisplay.classList.remove('text-white', 'text-yellow-400');
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error fetching favorites count:', error));
+            }
+
+            // Update counter on page load
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', updateFavoritesCounter);
+            } else {
+                updateFavoritesCounter();
+            }
+
+            // Update counter when page becomes visible (in case user favorited in another tab)
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    updateFavoritesCounter();
+                }
+            });
+
+            // Expose function globally so other pages can call it
+            window.updateFavoritesCounter = updateFavoritesCounter;
+        })();
     </script>
 
     {% block scripts %}{% endblock %}

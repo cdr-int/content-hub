@@ -1020,6 +1020,8 @@ def add_favorite(content_id):
         return jsonify({'success': False, 'error': 'Not logged in'}), 401
 
     user_id = session['user_id']
+    is_subscribed = session.get('is_subscribed', False)
+    is_admin = session.get('is_admin', False)
 
     # Check if already favorited
     existing = favorites_collection.find_one({
@@ -1029,6 +1031,20 @@ def add_favorite(content_id):
 
     if existing:
         return jsonify({'success': False, 'error': 'Already favorited'}), 400
+
+    # Check favorites limit for non-premium users
+    if not is_subscribed and not is_admin:
+        favorites_count = favorites_collection.count_documents({
+            'user_id': ObjectId(user_id)
+        })
+
+        if favorites_count >= 50:
+            return jsonify({
+                'success': False, 
+                'error': 'Favorites limit reached',
+                'limit_reached': True,
+                'message': 'You have reached the maximum of 50 favorites. Upgrade to premium for unlimited favorites!'
+            }), 403
 
     # Add to favorites
     favorites_collection.insert_one({
@@ -1071,6 +1087,26 @@ def check_favorite(content_id):
     })
 
     return jsonify({'is_favorited': favorite is not None})
+
+@app.route('/api/favorites/count', methods=['GET'])
+def get_favorites_count():
+    """Get current user's favorites count"""
+    if 'user_id' not in session:
+        return jsonify({'count': 0, 'is_subscribed': False})
+
+    user_id = session['user_id']
+    is_subscribed = session.get('is_subscribed', False)
+    is_admin = session.get('is_admin', False)
+
+    count = favorites_collection.count_documents({
+        'user_id': ObjectId(user_id)
+    })
+
+    return jsonify({
+        'count': count,
+        'is_subscribed': is_subscribed or is_admin,
+        'limit': None if (is_subscribed or is_admin) else 50
+    })
 
 # =======================
 # CATEGORY BANNER IMAGE

@@ -306,6 +306,11 @@
                     const newCount = currentCount - 1;
                     countText.textContent = `${newCount} item${newCount !== 1 ? 's' : ''} saved`;
 
+                    // Update favorites counter in navbar
+                    if (typeof window.updateFavoritesCounter === 'function') {
+                        window.updateFavoritesCounter();
+                    }
+
                     // Show empty state if no more favorites
                     if (document.querySelectorAll('.content-card').length === 0) {
                         location.reload();
