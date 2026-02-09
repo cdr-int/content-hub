@@ -9,20 +9,25 @@
         body {
             background-color: rgb(26, 26, 30);
         }
+        /* Hide Edge/IE password reveal button */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4" style="background-color: rgb(26, 26, 30);">
     <div class="relative rounded-2xl shadow-2xl p-8 w-full max-w-md" style="background-color: rgb(18, 18, 20);">
         <!-- Logo -->
         <div class="flex items-center justify-center mb-6">
-            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-xl shadow-lg">
+            <div class="bg-gradient-to-br from-[#21525D] to-[#317888] p-3 rounded-xl shadow-lg">
                 <svg class="w-10 h-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
             </div>
         </div>
 
-        <h1 class="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Welcome Back</h1>
+        <h1 class="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-[#317888] to-[#447F8E] bg-clip-text text-transparent">Welcome Back</h1>
         <p class="text-center text-gray-400 mb-8">Sign in to access your content</p>
         
         <!-- Login Form -->
@@ -40,7 +45,7 @@
                         id="username"
                         name="username"
                         required
-                        class="w-full pl-10 pr-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        class="w-full pl-10 pr-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-[#317888] focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
                         placeholder="Enter your username or email"
                     />
                 </div>
@@ -59,7 +64,7 @@
                         id="password"
                         name="password"
                         required
-                        class="w-full pl-10 pr-12 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        class="w-full pl-10 pr-12 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-[#317888] focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
                         placeholder="Enter your password"
                     />
                     <button
@@ -76,7 +81,7 @@
             </div>
             
             <div class="flex items-center justify-end">
-                <button type="button" onclick="showForgotPassword()" class="text-sm text-indigo-400 hover:text-indigo-300 font-semibold">
+                <button type="button" onclick="showForgotPassword()" class="text-sm text-[#317888] hover:text-[#447F8E] font-semibold">
                     Forgot Password?
                 </button>
             </div>
@@ -92,7 +97,7 @@
             
             <button
                 type="submit"
-                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                class="w-full bg-gradient-to-r from-[#21525D] to-[#317888] text-white py-3 rounded-xl font-semibold hover:from-[#1A1A1E] hover:to-[#21525D] transition transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
             >
                 Sign In
             </button>
@@ -123,7 +128,7 @@
                         type="email"
                         id="resetEmail"
                         required
-                        class="w-full pl-10 pr-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        class="w-full pl-10 pr-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-[#317888] focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
                         placeholder="Enter your email"
                     />
                 </div>
@@ -131,7 +136,7 @@
 
             <button
                 onclick="sendResetCode()"
-                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                class="w-full bg-gradient-to-r from-[#21525D] to-[#317888] text-white py-3 rounded-xl font-semibold hover:from-[#1A1A1E] hover:to-[#21525D] transition transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
             >
                 Send Reset Code
             </button>
@@ -146,8 +151,8 @@
                     </svg>
                     Back
                 </button>
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-indigo-500/20 rounded-full mb-4">
-                    <svg class="w-8 h-8 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-[#317888]/20 rounded-full mb-4">
+                    <svg class="w-8 h-8 text-[#317888]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                 </div>
@@ -162,7 +167,7 @@
                     id="resetCode"
                     maxlength="6"
                     pattern="[0-9]{6}"
-                    class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500 text-center text-2xl tracking-widest font-mono"
+                    class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-[#317888] focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500 text-center text-2xl tracking-widest font-mono"
                     placeholder="000000"
                 />
             </div>
@@ -175,7 +180,7 @@
                         id="newPassword"
                         minlength="6"
                         required
-                        class="w-full px-4 pr-12 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        class="w-full px-4 pr-12 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-[#317888] focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
                         placeholder="Enter new password"
                     />
                     <button
@@ -198,7 +203,7 @@
                         type="password"
                         id="confirmNewPassword"
                         required
-                        class="w-full px-4 pr-12 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
+                        class="w-full px-4 pr-12 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-[#317888] focus:border-transparent transition bg-gray-800/50 text-gray-200 placeholder-gray-500"
                         placeholder="Confirm new password"
                     />
                     <button
@@ -225,7 +230,7 @@
 
             <button
                 onclick="resetPassword()"
-                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                class="w-full bg-gradient-to-r from-[#21525D] to-[#317888] text-white py-3 rounded-xl font-semibold hover:from-[#1A1A1E] hover:to-[#21525D] transition transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
             >
                 Reset Password
             </button>
@@ -234,13 +239,13 @@
         <div id="registerLink" class="mt-6 text-center">
             <p class="text-gray-400 text-sm">
                 Don't have an account? 
-                <a href="/register" class="text-indigo-400 hover:text-indigo-300 font-semibold hover:underline">Create one</a>
+                <a href="/register" class="text-[#317888] hover:text-[#447F8E] font-semibold hover:underline">Create one</a>
             </p>
         </div>
         <!-- Message Box
-        <div class="mt-8 p-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl border border-indigo-500/30">
-            <p class="text-xs font-semibold text-indigo-400 mb-2">Message title</p>
-            <div class="space-y-1 text-xs text-indigo-300">
+        <div class="mt-8 p-4 bg-gradient-to-br from-[#21525D]/10 to-[#317888]/10 rounded-xl border border-[#317888]/30">
+            <p class="text-xs font-semibold text-[#317888] mb-2">Message title</p>
+            <div class="space-y-1 text-xs text-[#447F8E]">
                 <div class="flex items-center gap-2">
                     <span class="font-semibold">Message description</span>
                     <code class="bg-gray-800/50 px-2 py-0.5 rounded">code block</code>

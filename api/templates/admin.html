@@ -15,7 +15,7 @@
             </div>
             <p id="alertMessage" class="text-gray-400 mb-6 whitespace-pre-wrap"></p>
             <div class="flex justify-end">
-                <button onclick="closeAlert()" class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold">
+                <button onclick="closeAlert()" class="px-6 py-2.5 bg-[#21525D] text-white rounded-lg hover:bg-[#1A1A1E] transition font-semibold">
                     OK
                 </button>
             </div>
@@ -59,12 +59,12 @@
                 <h3 id="promptTitle" class="text-xl font-bold text-gray-200"></h3>
             </div>
             <p id="promptMessage" class="text-gray-400 mb-4 whitespace-pre-wrap"></p>
-            <input type="text" id="promptInput" class="w-full px-4 py-2.5 bg-gray-800 border border-gray-600 rounded-lg text-gray-200 placeholder-gray-500 mb-6 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Type here...">
+            <input type="text" id="promptInput" class="w-full px-4 py-2.5 bg-gray-800 border border-gray-600 rounded-lg text-gray-200 placeholder-gray-500 mb-6 focus:outline-none focus:ring-2 focus:ring-[#317888]" placeholder="Type here...">
             <div class="flex gap-3 justify-end">
                 <button onclick="closePrompt(null)" class="px-6 py-2.5 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition font-semibold">
                     Cancel
                 </button>
-                <button onclick="closePrompt(document.getElementById('promptInput').value)" class="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-semibold">
+                <button onclick="closePrompt(document.getElementById('promptInput').value)" class="px-6 py-2.5 bg-[#21525D] text-white rounded-lg hover:bg-[#1A1A1E] transition font-semibold">
                     OK
                 </button>
             </div>
@@ -99,7 +99,7 @@
                     <!-- User Header -->
                     <div class="flex items-center justify-between mb-3 gap-3">
                         <div class="flex items-center gap-3 min-w-0 flex-1">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#317888] to-[#447F8E] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                                 {{ user.username[0].upper() }}
                             </div>
                             <div class="min-w-0 flex-1">
@@ -134,7 +134,7 @@
                         <!-- Toggle Admin -->
                         <button
                             onclick="toggleAdminStatus('{{ user._id }}', '{{ 'true' if user.is_admin else 'false' }}')"
-                            class="admin-toggle-btn px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition {% if user.is_admin %}bg-red-600/20 text-red-400 hover:bg-red-600/30{% else %}bg-purple-600/20 text-purple-400 hover:bg-purple-600/30{% endif %}"
+                            class="admin-toggle-btn px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition {% if user.is_admin %}bg-red-600/20 text-red-400 hover:bg-red-600/30{% else %}bg-[#317888]/20 text-[#317888] hover:bg-[#21525D]/30{% endif %}"
                             title="{% if user.is_admin %}Demote to User{% else %}Promote to Admin{% endif %}"
                         >
                             <svg class="w-4 h-4 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -217,7 +217,7 @@
                                 onchange="toggleBetaMode(this.checked)"
                                 class="sr-only peer"
                             />
-                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#21525D] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#21525D]"></div>
                         </label>
                     </div>
 
@@ -248,14 +248,14 @@
                             <!-- Update button (desktop) -->
                             <button
                                 onclick="updateBetaKey()"
-                                class="hidden sm:flex px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition items-center gap-2"
+                                class="hidden sm:flex px-4 py-2 bg-[#21525D] text-white rounded-lg hover:bg-[#1A1A1E] transition items-center gap-2"
                             >
                                 <span>Update Key</span>
                             </button>
                             <!-- Update button (mobile - tick icon) -->
                             <button
                                 onclick="updateBetaKey()"
-                                class="sm:hidden w-10 h-10 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center justify-center"
+                                class="sm:hidden w-10 h-10 bg-[#21525D] text-white rounded-lg hover:bg-[#1A1A1E] transition flex items-center justify-center"
                                 title="Update Key"
                             >
                                 <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -287,15 +287,15 @@
                     </div>
 
                     <!-- Status Display -->
-                    <div class="p-3 rounded-lg {% if beta_settings.mode %}bg-purple-500/20 border border-purple-500/30{% else %}bg-gray-700/50 border border-gray-600{% endif %}">
+                    <div class="p-3 rounded-lg {% if beta_settings.mode %}bg-[#317888]/20 border border-[#317888]/30{% else %}bg-gray-700/50 border border-gray-600{% endif %}">
                         <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 {% if beta_settings.mode %}text-purple-400{% else %}text-gray-500{% endif %}" 
+                            <svg class="w-5 h-5 {% if beta_settings.mode %}text-[#317888]{% else %}text-gray-500{% endif %}" 
                                  xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
 
-                            <p class="text-sm {% if beta_settings.mode %}text-purple-400{% else %}text-gray-400{% endif %}">
+                            <p class="text-sm {% if beta_settings.mode %}text-[#317888]{% else %}text-gray-400{% endif %}">
                                 <span class="max-[640px]:hidden">
                                     Beta mode is currently <strong>{% if beta_settings.mode %}ENABLED{% else %}DISABLED{% endif %}</strong>
                                 </span>
@@ -502,7 +502,7 @@
                         <input
                             type="color"
                             id="newCategoryColorPicker"
-                            value="#4F46E5"
+                            value="#3c7c8c"
                             class="w-10 h-10 rounded border border-gray-600 cursor-pointer bg-gray-800"
                             title="Pick a color"
                             style="padding: 2px;"
@@ -520,14 +520,14 @@
                     <!-- Add button (desktop) -->
                     <button
                         onclick="addCategory()"
-                        class="hidden sm:flex px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition whitespace-nowrap items-center gap-2"
+                        class="hidden sm:flex px-4 py-2 bg-[#21525D] text-white rounded-lg hover:bg-[#1A1A1E] transition whitespace-nowrap items-center gap-2"
                     >
                         <span>Add Category</span>
                     </button>
                     <!-- Add button (mobile - + icon) -->
                     <button
                         onclick="addCategory()"
-                        class="sm:hidden w-10 h-10 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center"
+                        class="sm:hidden w-10 h-10 bg-[#21525D] text-white rounded-lg hover:bg-[#1A1A1E] transition flex items-center justify-center"
                         title="Add Category"
                     >
                         <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -593,7 +593,7 @@
                         <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ category.accent_color }}"></div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2">
-                                <a href="/category/{{ category._id }}" class="font-medium text-gray-200 hover:text-indigo-400 truncate transition">{{ category.name }}</a>
+                                <a href="/category/{{ category._id }}" class="font-medium text-gray-200 hover:text-[#317888] truncate transition">{{ category.name }}</a>
                                 {% if category.get('is_pinned', False) %}
                                 <svg class="w-4 h-4 text-yellow-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/>
@@ -611,7 +611,7 @@
                     <div class="flex items-center gap-1 ml-2 flex-shrink-0">
                         <a
                             href="/category/{{ category._id }}"
-                            class="p-1.5 text-indigo-400 hover:bg-indigo-500/20 rounded transition-colors"
+                            class="p-1.5 text-[#317888] hover:bg-[#317888]/20 rounded transition-colors"
                             title="Edit Category"
                         >
                             <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -664,8 +664,8 @@
                 iconClass = 'bg-yellow-500/20';
                 iconHTML = '<svg class="w-6 h-6 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
             } else {
-                iconClass = 'bg-indigo-500/20';
-                iconHTML = '<svg class="w-6 h-6 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+                iconClass = 'bg-[#317888]/20';
+                iconHTML = '<svg class="w-6 h-6 text-[#317888]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
             }
 
             iconDiv.className = `w-12 h-12 rounded-full flex items-center justify-center ${iconClass}`;
@@ -713,9 +713,9 @@
                 iconHTML = '<svg class="w-6 h-6 text-yellow-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
                 btnClass = 'bg-yellow-600 hover:bg-yellow-700';
             } else {
-                iconClass = 'bg-indigo-500/20';
-                iconHTML = '<svg class="w-6 h-6 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
-                btnClass = 'bg-indigo-600 hover:bg-indigo-700';
+                iconClass = 'bg-[#317888]/20';
+                iconHTML = '<svg class="w-6 h-6 text-[#317888]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+                btnClass = 'bg-[#21525D] hover:bg-[#1A1A1E]';
             }
 
             iconDiv.className = `w-12 h-12 rounded-full flex items-center justify-center ${iconClass}`;
@@ -1256,7 +1256,7 @@
                     if (newAdminStatus) {
                         adminButton.className = 'admin-toggle-btn px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition bg-red-600/20 text-red-400 hover:bg-red-600/30';
                     } else {
-                        adminButton.className = 'admin-toggle-btn px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition bg-purple-600/20 text-purple-400 hover:bg-purple-600/30';
+                        adminButton.className = 'admin-toggle-btn px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition bg-[#317888]/20 text-[#317888] hover:bg-[#21525D]/30';
                     }
                 }
             } else {

@@ -63,7 +63,7 @@
 
                 <button
                     onclick="showChangePasswordModal()"
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition text-sm font-medium"
+                    class="px-4 py-2 bg-[#21525D] text-white rounded-lg hover:bg-[#1A1A1E] transition text-sm font-medium"
                 >
                     Change Password
                 </button>
@@ -108,7 +108,7 @@
         </div>
 
         <div id="passwordStep1" class="space-y-4">
-            <p class="text-sm text-gray-400">We'll send a verification code to your email: <span class="text-indigo-400 font-medium">{{ user.email }}</span></p>
+            <p class="text-sm text-gray-400">We'll send a verification code to your email: <span class="text-[#317888] font-medium">{{ user.email }}</span></p>
 
             <div id="passwordError" class="hidden bg-red-500/20 border-l-4 border-red-500 p-3 rounded">
                 <p class="text-red-400 text-sm" id="passwordErrorText"></p>
@@ -116,7 +116,7 @@
 
             <button
                 onclick="sendPasswordChangeCode()"
-                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition"
+                class="w-full bg-gradient-to-r from-[#21525D] to-[#317888] text-white py-3 rounded-xl font-semibold hover:from-[#1A1A1E] hover:to-[#21525D] transition"
             >
                 Send Verification Code
             </button>
@@ -130,7 +130,7 @@
                     id="passwordCode"
                     maxlength="6"
                     pattern="[0-9]{6}"
-                    class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-gray-800/50 text-gray-200 text-center text-2xl tracking-widest font-mono"
+                    class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-[#317888] bg-gray-800/50 text-gray-200 text-center text-2xl tracking-widest font-mono"
                     placeholder="000000"
                 />
             </div>
@@ -141,7 +141,7 @@
                     type="password"
                     id="newPasswordInput"
                     minlength="6"
-                    class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-gray-800/50 text-gray-200"
+                    class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-[#317888] bg-gray-800/50 text-gray-200"
                     placeholder="Enter new password"
                 />
             </div>
@@ -151,14 +151,14 @@
                 <input
                     type="password"
                     id="confirmPasswordInput"
-                    class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-gray-800/50 text-gray-200"
+                    class="w-full px-4 py-3 border-2 border-gray-600 rounded-xl focus:ring-2 focus:ring-[#317888] bg-gray-800/50 text-gray-200"
                     placeholder="Confirm new password"
                 />
             </div>
 
             <button
                 onclick="changePassword()"
-                class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition"
+                class="w-full bg-gradient-to-r from-[#21525D] to-[#317888] text-white py-3 rounded-xl font-semibold hover:from-[#1A1A1E] hover:to-[#21525D] transition"
             >
                 Change Password
             </button>
