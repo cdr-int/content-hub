@@ -310,6 +310,31 @@
             </div>
         </div>
 
+        <!-- Speed Insights Documentation Seeding -->
+        <div class="mb-6 sm:mb-8">
+            <h3 class="text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-gray-300">Content Management</h3>
+            <div class="bg-gray-800/50 rounded-lg p-4">
+                <div class="space-y-4">
+                    <div>
+                        <p class="font-medium text-gray-200 mb-2">Speed Insights Documentation</p>
+                        <p class="text-xs text-gray-500 mb-3">Add Vercel Speed Insights getting started guide to the content hub</p>
+                    </div>
+                    
+                    <button
+                        onclick="seedSpeedInsights()"
+                        class="w-full sm:w-auto px-6 py-2.5 bg-[#0070f3] text-white rounded-lg hover:bg-[#0060d3] transition flex items-center justify-center gap-2"
+                    >
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span>Add Speed Insights Documentation</span>
+                    </button>
+
+                    <div id="seedStatus" class="hidden p-3 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Access Time Settings -->
         <div class="mb-6 sm:mb-8">
             <h3 class="text-base sm:text-lg font-semibold mb-2 sm:mb-3 text-gray-300">Access Time Limit</h3>
@@ -1309,6 +1334,78 @@
             console.error('Error:', error);
             await showAlert('Failed to reset password', 'Error', 'error');
         });
+    }
+
+    // Speed Insights Seeding Function
+    async function seedSpeedInsights() {
+        const statusDiv = document.getElementById('seedStatus');
+        
+        try {
+            statusDiv.className = 'p-3 rounded-lg bg-blue-500/20 border border-blue-500/30';
+            statusDiv.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-400 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <p class="text-sm text-blue-400">Seeding Speed Insights documentation...</p>
+                </div>
+            `;
+            statusDiv.classList.remove('hidden');
+
+            const response = await fetch('/api/admin/seed-speed-insights', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                statusDiv.className = 'p-3 rounded-lg bg-green-500/20 border border-green-500/30';
+                statusDiv.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <p class="text-sm text-green-400">${data.message}</p>
+                    </div>
+                `;
+                
+                // Show success alert
+                await showAlert(data.message, 'Success', 'success');
+                
+                // Hide status after 5 seconds
+                setTimeout(() => {
+                    statusDiv.classList.add('hidden');
+                }, 5000);
+            } else {
+                statusDiv.className = 'p-3 rounded-lg bg-red-500/20 border border-red-500/30';
+                statusDiv.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <p class="text-sm text-red-400">${data.message}</p>
+                    </div>
+                `;
+                await showAlert(data.message, 'Error', 'error');
+            }
+        } catch (error) {
+            console.error('Error seeding Speed Insights:', error);
+            statusDiv.className = 'p-3 rounded-lg bg-red-500/20 border border-red-500/30';
+            statusDiv.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <p class="text-sm text-red-400">Failed to seed documentation</p>
+                </div>
+            `;
+            statusDiv.classList.remove('hidden');
+            await showAlert('Failed to seed Speed Insights documentation', 'Error', 'error');
+        }
     }
 
 </script>
