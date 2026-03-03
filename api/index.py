@@ -38,6 +38,28 @@ SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
 FROM_EMAIL = os.environ.get('FROM_EMAIL', SMTP_USERNAME)
 
+def cleanup_expired_data():
+    """Delete expired verification codes and unverified accounts older than 1 day"""
+    now = datetime.utcnow()
+
+    # Delete expired verification codes (older than 15 minutes)
+    verification_codes_collection.delete_many({
+        'expires_at': {'$lt': now}
+    })
+
+    # Delete unverified accounts older than 1 day
+    one_day_ago = now - timedelta(days=1)
+    old_unverified = list(users_collection.find({
+        'email_verified': False,
+        'created_at': {'$lt': one_day_ago}
+    }))
+    for user in old_unverified:
+        user_id = user['_id']
+        favorites_collection.delete_many({'user_id': user_id})
+        user_pins_collection.delete_many({'user_id': user_id})
+        users_collection.delete_one({'_id': user_id})
+
+
 def send_email(to_email, subject, body):
     """Send email using SMTP"""
     try:
@@ -209,10 +231,11 @@ def index():
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
-    
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
+        cleanup_expired_data()
         data = request.json
         username_or_email = data.get('username')
         password = data.get('password')
@@ -1410,6 +1433,7 @@ def reset_user_timer_if_needed(user):
 @login_required
 def get_timer():
     """Get current user's remaining access time"""
+    cleanup_expired_data()
     user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
 
     if not user:
