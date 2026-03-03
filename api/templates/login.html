@@ -73,14 +73,16 @@
             box-shadow:0 0 8px rgba(239,68,68,0.5);
         }
         .pin-key {
-            width:4.5rem; height:4.5rem; border-radius:0.875rem;
+            width:5rem; height:5rem; border-radius:0.875rem;
             background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
-            color:#e5e7eb; font-size:1.25rem; font-weight:600;
-            cursor:pointer; transition:all 0.12s; user-select:none;
+            color:#e5e7eb; font-size:1.375rem; font-weight:600;
+            cursor:pointer; transition:background 0.08s, transform 0.08s, border-color 0.08s;
+            user-select:none; touch-action:manipulation;
+            -webkit-tap-highlight-color:transparent;
             display:flex; align-items:center; justify-content:center;
         }
         .pin-key:hover { background:rgba(49,120,136,0.18); border-color:rgba(49,120,136,0.4); }
-        .pin-key:active { transform:scale(0.92); background:rgba(49,120,136,0.28); }
+        .pin-key:active, .pin-key.pressed { transform:scale(0.91); background:rgba(49,120,136,0.32); border-color:rgba(49,120,136,0.5); }
         .pin-key.backspace { color:#9ca3af; font-size:1rem; }
         .pin-key.empty { pointer-events:none; background:transparent; border:none; }
         @keyframes pinShake {
@@ -355,18 +357,18 @@
 
             <!-- Numpad -->
             <div class="grid grid-cols-3 gap-2.5 justify-items-center" id="pinPad">
-                <button class="pin-key" onclick="pinKey('1')">1</button>
-                <button class="pin-key" onclick="pinKey('2')">2</button>
-                <button class="pin-key" onclick="pinKey('3')">3</button>
-                <button class="pin-key" onclick="pinKey('4')">4</button>
-                <button class="pin-key" onclick="pinKey('5')">5</button>
-                <button class="pin-key" onclick="pinKey('6')">6</button>
-                <button class="pin-key" onclick="pinKey('7')">7</button>
-                <button class="pin-key" onclick="pinKey('8')">8</button>
-                <button class="pin-key" onclick="pinKey('9')">9</button>
-                <button class="pin-key empty"></button>
-                <button class="pin-key" onclick="pinKey('0')">0</button>
-                <button class="pin-key backspace" onclick="pinBackspace()" title="Delete">
+                <button class="pin-key" data-digit="1">1</button>
+                <button class="pin-key" data-digit="2">2</button>
+                <button class="pin-key" data-digit="3">3</button>
+                <button class="pin-key" data-digit="4">4</button>
+                <button class="pin-key" data-digit="5">5</button>
+                <button class="pin-key" data-digit="6">6</button>
+                <button class="pin-key" data-digit="7">7</button>
+                <button class="pin-key" data-digit="8">8</button>
+                <button class="pin-key" data-digit="9">9</button>
+                <button class="pin-key empty" aria-hidden="true"></button>
+                <button class="pin-key" data-digit="0">0</button>
+                <button class="pin-key backspace" data-action="backspace" title="Delete">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z"/></svg>
                 </button>
             </div>
@@ -640,7 +642,33 @@
             renderPinDots();
         }
 
-        function renderPinDots(state = 'normal') {
+        function _dispatchPinBtn(btn) {
+            var digit = btn.dataset.digit;
+            var action = btn.dataset.action;
+            if (digit !== undefined) pinKey(digit);
+            else if (action === 'backspace') pinBackspace();
+        }
+
+        // touchstart fires immediately, no 300ms delay
+        document.getElementById('pinPad').addEventListener('touchstart', function(e) {
+            var btn = e.target.closest ? e.target.closest('[data-digit],[data-action]') : null;
+            if (!btn) return;
+            e.preventDefault();
+            btn.classList.add('pressed');
+            function off() { btn.classList.remove('pressed'); }
+            btn.addEventListener('touchend', off, {once:true});
+            btn.addEventListener('touchcancel', off, {once:true});
+            _dispatchPinBtn(btn);
+        }, {passive: false});
+
+        // Click fallback for desktop
+        document.getElementById('pinPad').addEventListener('click', function(e) {
+            var btn = e.target.closest ? e.target.closest('[data-digit],[data-action]') : null;
+            if (!btn) return;
+            _dispatchPinBtn(btn);
+        });
+
+                function renderPinDots(state = 'normal') {
             for (let i = 0; i < 4; i++) {
                 const dot = document.getElementById('dot' + i);
                 dot.className = 'pin-dot';
