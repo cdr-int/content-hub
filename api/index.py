@@ -267,6 +267,11 @@ def login():
                 return jsonify({'success': False, 'message': 'Please verify your email first'}), 401
 
             if check_password_hash(user['password'], password):
+                # Update last_online timestamp
+                users_collection.update_one(
+                    {'_id': user['_id']},
+                    {'$set': {'last_online': datetime.utcnow()}}
+                )
                 session['user_id'] = str(user['_id'])
                 session['username'] = user['username']
                 session['is_admin'] = user.get('is_admin', False)
@@ -903,6 +908,16 @@ def mark_account_refreshed():
         session['username'] = user.get('username')
         session.modified = True  # Ensure session is saved
 
+    return jsonify({'success': True})
+
+@app.route('/api/account/heartbeat', methods=['POST'])
+@login_required
+def account_heartbeat():
+    """Update last_online timestamp for the current user"""
+    users_collection.update_one(
+        {'_id': ObjectId(session['user_id'])},
+        {'$set': {'last_online': datetime.utcnow()}}
+    )
     return jsonify({'success': True})
 
 @app.route('/api/categories', methods=['GET'])

@@ -26,76 +26,103 @@
                 <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wide">Users</h3>
                 <span class="ml-auto text-xs text-gray-600" id="userCountLabel">{{ users|length }} total</span>
             </div>
-            <div class="relative mb-3">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                <input type="text" id="userSearch" placeholder="Search users by name or email..."
-                    class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm bg-gray-800/60 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#317888] focus:ring-1 focus:ring-[#317888]"
-                    onkeyup="filterUsers()"/>
+
+            <!-- Search + Sort row -->
+            <div class="flex gap-2 mb-3">
+                <div class="relative flex-1">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input type="text" id="userSearch" placeholder="Search users by name or email..."
+                        class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm bg-gray-800/60 border border-gray-700 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#317888] focus:ring-1 focus:ring-[#317888]"
+                        oninput="filterAndSortUsers()"/>
+                </div>
+                <div class="relative">
+                    <select id="userSort" onchange="filterAndSortUsers()"
+                        class="appearance-none pl-3 pr-8 py-2.5 rounded-xl text-sm bg-gray-800/60 border border-gray-700 text-gray-300 focus:outline-none focus:border-[#317888] focus:ring-1 focus:ring-[#317888] cursor-pointer h-full">
+                        <option value="rank">Rank (Admins first)</option>
+                        <option value="username_asc">Username A–Z</option>
+                        <option value="username_desc">Username Z–A</option>
+                        <option value="created_desc">Date Created (Newest)</option>
+                        <option value="created_asc">Date Created (Oldest)</option>
+                        <option value="last_online_desc">Last Online (Recent)</option>
+                        <option value="last_online_asc">Last Online (Oldest)</option>
+                    </select>
+                    <svg class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
             </div>
+
             <div id="usersList" class="space-y-2 max-h-[500px] overflow-y-auto pr-1">
                 {% for user in users %}
-                <div class="user-row rounded-xl border border-gray-700/50 overflow-hidden"
+                <div class="user-row flex items-center gap-3 px-3 py-3 rounded-xl border border-gray-700/50"
                      data-username="{{ user.username.lower() }}"
                      data-email="{{ ('' if user.get('protected_email', False) else user.email).lower() }}"
                      data-user-id="{{ user._id }}"
+                     data-is-admin="{{ 'true' if user.is_admin else 'false' }}"
+                     data-is-subscribed="{{ 'true' if user.is_subscribed else 'false' }}"
+                     data-created="{{ user.get('created_at', '')|string }}"
+                     data-last-online="{{ user.get('last_online', user.get('created_at', ''))|string }}"
+                     data-display-username="{{ user.username }}"
+                     data-display-email="{{ 'Hidden' if user.get('protected_email', False) else user.email }}"
                      style="background: rgba(255,255,255,0.022)">
-                    <div class="flex items-center gap-3 px-3 py-3">
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#317888] to-[#447F8E] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">{{ user.username[0].upper() }}</div>
-                        <div class="min-w-0 flex-1">
-                            <p class="font-semibold text-gray-100 truncate text-sm">{{ user.username }}</p>
-                            <p class="text-xs text-gray-500 truncate">{% if user.get('protected_email', False) %}<span class="italic">Hidden</span>{% else %}{{ user.email }}{% endif %}</p>
-                        </div>
-                        <div class="flex items-center gap-1.5 flex-shrink-0">
-                            <span class="admin-badge px-2 py-0.5 text-xs rounded-full font-medium {% if user.is_admin %}bg-purple-500/20 text-purple-400{% else %}bg-gray-700/80 text-gray-500{% endif %}">{% if user.is_admin %}Admin{% else %}User{% endif %}</span>
-                            <span class="subscription-badge px-2 py-0.5 text-xs rounded-full font-medium {% if user.is_subscribed %}bg-green-500/20 text-green-400{% else %}bg-gray-700/80 text-gray-500{% endif %}">{% if user.is_subscribed %}Premium{% else %}Free{% endif %}</span>
-                        </div>
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#317888] to-[#447F8E] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">{{ user.username[0].upper() }}</div>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold text-gray-100 truncate text-sm">{{ user.username }}</p>
+                        <p class="text-xs text-gray-500 truncate">{% if user.get('protected_email', False) %}<span class="italic">Hidden</span>{% else %}{{ user.email }}{% endif %}</p>
                     </div>
-                    {% if user._id|string != session.get('user_id')|string %}
-                    <div class="grid grid-cols-4 border-t border-gray-700/30">
-                        <button onclick="toggleAdminStatus('{{ user._id }}', '{{ 'true' if user.is_admin else 'false' }}')"
-                            title="{% if user.is_admin %}Demote{% else %}Promote to Admin{% endif %}"
-                            class="admin-toggle-btn flex flex-col items-center justify-center gap-1 py-3 text-xs font-medium transition-colors
-                                   {% if user.is_admin %}text-red-400 hover:bg-red-500/10{% else %}text-[#5eead4] hover:bg-[#317888]/10{% endif %}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                {% if user.is_admin %}<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
-                                {% else %}<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>{% endif %}
-                            </svg>
-                            <span class="hidden sm:block">{% if user.is_admin %}Demote{% else %}Promote{% endif %}</span>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <span class="admin-badge px-2 py-0.5 text-xs rounded-full font-medium {% if user.is_admin %}bg-purple-500/20 text-purple-400{% else %}bg-gray-700/80 text-gray-500{% endif %}">{% if user.is_admin %}Admin{% else %}User{% endif %}</span>
+                        <span class="subscription-badge px-2 py-0.5 text-xs rounded-full font-medium {% if user.is_subscribed %}bg-green-500/20 text-green-400{% else %}bg-gray-700/80 text-gray-500{% endif %}">{% if user.is_subscribed %}Premium{% else %}Free{% endif %}</span>
+                        {% if user._id|string != session.get('user_id')|string %}
+                        <button onclick="openUserEditModal('{{ user._id }}')" title="Edit user"
+                            class="ml-1 p-1.5 rounded-lg text-gray-500 hover:text-[#5eead4] hover:bg-[#317888]/15 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </button>
-                        <button onclick="toggleSubscription('{{ user._id }}', {{ 'true' if user.is_subscribed else 'false' }})"
-                            title="{% if user.is_subscribed %}Revoke Premium{% else %}Grant Premium{% endif %}"
-                            class="sub-toggle-btn flex flex-col items-center justify-center gap-1 py-3 text-xs font-medium transition-colors border-l border-gray-700/30
-                                   {% if user.is_subscribed %}text-orange-400 hover:bg-orange-500/10{% else %}text-green-400 hover:bg-green-500/10{% endif %}">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                {% if user.is_subscribed %}<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                {% else %}<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>{% endif %}
-                            </svg>
-                            <span class="hidden sm:block">{% if user.is_subscribed %}Revoke{% else %}Grant{% endif %}</span>
-                        </button>
-                        <button onclick="resetUserPassword('{{ user._id }}', '{{ user.username }}')"
-                            title="Reset Password"
-                            class="flex flex-col items-center justify-center gap-1 py-3 text-xs font-medium text-yellow-400 hover:bg-yellow-500/10 transition-colors border-l border-gray-700/30">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
-                            <span class="hidden sm:block">Reset PW</span>
-                        </button>
-                        <button onclick="deleteUser('{{ user._id }}', '{{ user.username }}')"
-                            title="Delete User"
-                            class="flex flex-col items-center justify-center gap-1 py-3 text-xs font-medium text-red-400 hover:bg-red-500/10 transition-colors border-l border-gray-700/30">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            <span class="hidden sm:block">Delete</span>
-                        </button>
+                        {% else %}
+                        <span class="ml-1 px-2 py-0.5 text-xs text-gray-600 italic">You</span>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <div class="px-3 py-2 border-t border-gray-700/30 text-center">
-                        <span class="text-xs text-gray-600">Your account — cannot modify</span>
-                    </div>
-                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
         </section>
+
+        <!-- ===== USER EDIT MODAL ===== -->
+        <div id="userEditModal" class="fixed inset-0 z-50 items-center justify-center p-4" style="display:none">
+            <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeUserEditModal()"></div>
+            <div class="relative w-full max-w-sm rounded-2xl border border-gray-700/60 shadow-2xl overflow-hidden" style="background: rgb(22,22,26)">
+                <div class="flex items-center gap-3 px-5 py-4 border-b border-gray-700/40">
+                    <div id="modalUserAvatar" class="w-9 h-9 rounded-full bg-gradient-to-br from-[#317888] to-[#447F8E] flex items-center justify-center text-white font-bold text-sm flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <p id="modalUsername" class="font-semibold text-gray-100 text-sm truncate"></p>
+                        <p id="modalEmail" class="text-xs text-gray-500 truncate"></p>
+                    </div>
+                    <button onclick="closeUserEditModal()" class="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors flex-shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="p-4 space-y-2">
+                    <button id="modalAdminBtn" onclick="modalToggleAdmin()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="modalAdminIcon"></svg>
+                        <span id="modalAdminLabel"></span>
+                    </button>
+                    <button id="modalSubBtn" onclick="modalToggleSub()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="modalSubIcon"></svg>
+                        <span id="modalSubLabel"></span>
+                    </button>
+                    <button onclick="modalResetPassword()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-yellow-400 bg-yellow-500/5 border border-yellow-500/20 hover:bg-yellow-500/10 transition-colors">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                        <span>Reset Password</span>
+                    </button>
+                    <button onclick="modalDeleteUser()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400 bg-red-500/5 border border-red-500/20 hover:bg-red-500/10 transition-colors">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        <span>Delete User</span>
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- ===== BETA SETTINGS ===== -->
         <section class="mb-8">
@@ -278,24 +305,142 @@
 <script>
     const TOTAL_USERS = {{ users|length }};
 
-    function filterUsers() {
+    function filterAndSortUsers() {
         const q = document.getElementById('userSearch').value.toLowerCase().trim();
-        const rows = document.querySelectorAll('.user-row');
-        let visible = 0;
-        rows.forEach(r => {
+        const sort = document.getElementById('userSort').value;
+        const list = document.getElementById('usersList');
+        const rows = Array.from(document.querySelectorAll('.user-row'));
+
+        let visible = rows.filter(r => {
             const matchName  = r.dataset.username.includes(q);
             const matchEmail = r.dataset.email && r.dataset.email.includes(q);
-            const show = matchName || matchEmail;
-            r.style.display = show ? '' : 'none';
-            if (show) visible++;
+            return matchName || matchEmail;
         });
+
+        visible.sort((a, b) => {
+            switch(sort) {
+                case 'rank':
+                    if (a.dataset.isAdmin !== b.dataset.isAdmin)
+                        return a.dataset.isAdmin === 'true' ? -1 : 1;
+                    return a.dataset.username.localeCompare(b.dataset.username);
+                case 'username_asc':
+                    return a.dataset.username.localeCompare(b.dataset.username);
+                case 'username_desc':
+                    return b.dataset.username.localeCompare(a.dataset.username);
+                case 'created_desc':
+                    return new Date(b.dataset.created||0) - new Date(a.dataset.created||0);
+                case 'created_asc':
+                    return new Date(a.dataset.created||0) - new Date(b.dataset.created||0);
+                case 'last_online_desc':
+                    return new Date(b.dataset.lastOnline||0) - new Date(a.dataset.lastOnline||0);
+                case 'last_online_asc':
+                    return new Date(a.dataset.lastOnline||0) - new Date(b.dataset.lastOnline||0);
+                default:
+                    return 0;
+            }
+        });
+
+        rows.forEach(r => r.style.display = 'none');
+        visible.forEach(r => { r.style.display = ''; list.appendChild(r); });
+
         const label = document.getElementById('userCountLabel');
-        if (q === '') {
-            label.textContent = `${TOTAL_USERS} total`;
-        } else {
-            label.textContent = `${visible} result${visible !== 1 ? 's' : ''}`;
-        }
+        label.textContent = q === '' ? `${TOTAL_USERS} total` : `${visible.length} result${visible.length !== 1 ? 's' : ''}`;
     }
+
+    document.addEventListener('DOMContentLoaded', () => filterAndSortUsers());
+
+    // ── User Edit Modal ───────────────────────────────────────────────
+
+    let _editUserId = null;
+
+    function openUserEditModal(userId) {
+        const row = document.querySelector(`.user-row[data-user-id="${userId}"]`);
+        if (!row) return;
+        _editUserId = userId;
+
+        const username = row.dataset.displayUsername || row.dataset.username;
+        const email    = row.dataset.displayEmail    || row.dataset.email;
+        const isAdmin  = row.dataset.isAdmin === 'true';
+        const isSub    = row.dataset.isSubscribed === 'true';
+
+        document.getElementById('modalUserAvatar').textContent = username[0].toUpperCase();
+        document.getElementById('modalUsername').textContent   = username;
+        document.getElementById('modalEmail').textContent      = email;
+
+        const adminBtn   = document.getElementById('modalAdminBtn');
+        const adminIcon  = document.getElementById('modalAdminIcon');
+        const adminLabel = document.getElementById('modalAdminLabel');
+        if (isAdmin) {
+            adminBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border text-red-400 bg-red-500/5 border-red-500/20 hover:bg-red-500/10';
+            adminIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>';
+            adminLabel.textContent = 'Demote to User';
+        } else {
+            adminBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border text-[#5eead4] bg-[#317888]/5 border-[#317888]/25 hover:bg-[#317888]/10';
+            adminIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>';
+            adminLabel.textContent = 'Promote to Admin';
+        }
+
+        const subBtn   = document.getElementById('modalSubBtn');
+        const subIcon  = document.getElementById('modalSubIcon');
+        const subLabel = document.getElementById('modalSubLabel');
+        if (isSub) {
+            subBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border text-orange-400 bg-orange-500/5 border-orange-500/20 hover:bg-orange-500/10';
+            subIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+            subLabel.textContent = 'Revoke Premium';
+        } else {
+            subBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border text-green-400 bg-green-500/5 border-green-500/20 hover:bg-green-500/10';
+            subIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+            subLabel.textContent = 'Grant Premium';
+        }
+
+        document.getElementById('userEditModal').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeUserEditModal() {
+        document.getElementById('userEditModal').style.display = 'none';
+        document.body.style.overflow = '';
+        _editUserId = null;
+    }
+
+    // Capture userId BEFORE closing the modal (closing nulls _editUserId)
+    async function modalToggleAdmin() {
+        if (!_editUserId) return;
+        const userId = _editUserId;
+        const row = document.querySelector(`.user-row[data-user-id="${userId}"]`);
+        const isAdmin = row.dataset.isAdmin === 'true';
+        closeUserEditModal();
+        await toggleAdminStatus(userId, String(isAdmin));
+    }
+
+    async function modalToggleSub() {
+        if (!_editUserId) return;
+        const userId = _editUserId;
+        const row = document.querySelector(`.user-row[data-user-id="${userId}"]`);
+        const isSub = row.dataset.isSubscribed === 'true';
+        closeUserEditModal();
+        await toggleSubscription(userId, isSub);
+    }
+
+    async function modalResetPassword() {
+        if (!_editUserId) return;
+        const userId = _editUserId;
+        const row = document.querySelector(`.user-row[data-user-id="${userId}"]`);
+        const username = row.dataset.displayUsername || row.dataset.username;
+        closeUserEditModal();
+        await resetUserPassword(userId, username);
+    }
+
+    async function modalDeleteUser() {
+        if (!_editUserId) return;
+        const userId = _editUserId;
+        const row = document.querySelector(`.user-row[data-user-id="${userId}"]`);
+        const username = row.dataset.displayUsername || row.dataset.username;
+        closeUserEditModal();
+        await deleteUser(userId, username);
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeUserEditModal(); });
 
     async function toggleSubscription(userId, currentStatus) {
         const newStatus = !JSON.parse(currentStatus);
@@ -313,23 +458,10 @@
                 showToast(newStatus ? 'Premium granted' : 'Premium revoked', 'success');
                 const row = document.querySelector(`.user-row[data-user-id="${userId}"]`);
                 if (row) {
+                    row.dataset.isSubscribed = String(newStatus);
                     const badge = row.querySelector('.subscription-badge');
                     if (newStatus) { badge.className='subscription-badge px-2 py-0.5 text-xs rounded-full font-medium bg-green-500/20 text-green-400'; badge.textContent='Premium'; }
                     else { badge.className='subscription-badge px-2 py-0.5 text-xs rounded-full font-medium bg-gray-700/80 text-gray-500'; badge.textContent='Free'; }
-                    const btn = row.querySelector('.sub-toggle-btn');
-                    if (btn) {
-                        btn.setAttribute('onclick',`toggleSubscription('${userId}', ${newStatus})`);
-                        btn.title = newStatus ? 'Revoke Premium' : 'Grant Premium';
-                        if (newStatus) {
-                            btn.className = btn.className.replace('text-green-400 hover:bg-green-500/10','text-orange-400 hover:bg-orange-500/10');
-                            btn.querySelector('svg').innerHTML='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
-                            const sp=btn.querySelector('span'); if(sp) sp.textContent='Revoke';
-                        } else {
-                            btn.className = btn.className.replace('text-orange-400 hover:bg-orange-500/10','text-green-400 hover:bg-green-500/10');
-                            btn.querySelector('svg').innerHTML='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
-                            const sp=btn.querySelector('span'); if(sp) sp.textContent='Grant';
-                        }
-                    }
                 }
             } else showToast('Failed to update subscription','error');
         } catch(e) { showToast('Network error','error'); }
@@ -506,20 +638,10 @@
                 showToast(newStatus?'Promoted to admin':'Demoted to user','success');
                 const row = document.querySelector(`.user-row[data-user-id="${userId}"]`);
                 if(row){
-                    const b=row.querySelector('.admin-badge'), btn=row.querySelector('.admin-toggle-btn');
+                    row.dataset.isAdmin = String(newStatus);
+                    const b = row.querySelector('.admin-badge');
                     if(newStatus){ b.className='admin-badge px-2 py-0.5 text-xs rounded-full font-medium bg-purple-500/20 text-purple-400'; b.textContent='Admin'; }
                     else { b.className='admin-badge px-2 py-0.5 text-xs rounded-full font-medium bg-gray-700/80 text-gray-500'; b.textContent='User'; }
-                    btn.setAttribute('onclick',`toggleAdminStatus('${userId}', '${newStatus}')`);
-                    btn.title = newStatus?'Demote':'Promote to Admin';
-                    if(newStatus){
-                        btn.className=btn.className.replace('text-[#5eead4] hover:bg-[#317888]/10','text-red-400 hover:bg-red-500/10');
-                        btn.querySelector('svg').innerHTML='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>';
-                        const sp=btn.querySelector('span'); if(sp) sp.textContent='Demote';
-                    } else {
-                        btn.className=btn.className.replace('text-red-400 hover:bg-red-500/10','text-[#5eead4] hover:bg-[#317888]/10');
-                        btn.querySelector('svg').innerHTML='<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>';
-                        const sp=btn.querySelector('span'); if(sp) sp.textContent='Promote';
-                    }
                 }
             } else showToast('Failed to update admin status','error');
         } catch(e) { showToast('Network error','error'); }
