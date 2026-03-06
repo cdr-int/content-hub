@@ -953,10 +953,13 @@
 
     function initMobileLayout() {
         if (isMobile()) {
-            // Always start with conv panel visible on open
-            document.getElementById('msgConvPanel').classList.add('mobile-open');
-            document.getElementById('msgBackBtn').style.display = 'none';
-            document.getElementById('msgModalTitle').textContent = 'Message Centre';
+            // Only set conv panel visible if no chat is currently active
+            const chatOpen = document.getElementById('activeChatPanel').style.display === 'flex';
+            if (!chatOpen) {
+                document.getElementById('msgConvPanel').classList.add('mobile-open');
+                document.getElementById('msgBackBtn').style.display = 'none';
+                document.getElementById('msgModalTitle').textContent = 'Message Centre';
+            }
         } else {
             // Desktop: reset any leftover mobile state
             document.getElementById('msgConvPanel').classList.remove('mobile-open');
@@ -1066,7 +1069,21 @@
         } catch(e) { /* silent */ }
     }
     async function adminPollMessages() {
-        await loadConversations();
+        // Only reload the conversation list when no chat is open —
+        // rebuilding the DOM while a chat is active causes a visual
+        // relayout on real mobile that makes the conv panel flash back.
+        if (!adminCurrentUserId) {
+            await loadConversations();
+        } else {
+            // Still update unread badges silently without touching the DOM structure
+            try {
+                const data = await fetch('/api/admin/conversations').then(r => r.json());
+                allConversations = data.conversations || [];
+                const unread = allConversations.reduce((s, c) => s + (c.unread_count || 0), 0);
+                const btn = document.getElementById('unreadBadgeBtn');
+                if (btn) { if (unread > 0) { btn.textContent = unread; btn.classList.remove('hidden'); } else btn.classList.add('hidden'); }
+            } catch(e) { /* silent */ }
+        }
         if (!adminCurrentUserId || !adminLastMsgId) return;
         try {
             const data = await fetch('/api/admin/messages/' + adminCurrentUserId + '/poll?after=' + encodeURIComponent(adminLastMsgId)).then(r => r.json());
