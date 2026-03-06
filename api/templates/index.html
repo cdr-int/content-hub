@@ -102,7 +102,7 @@
             {% if categories %}
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {% for cat in categories[:8] %}
-                <a href="/categories/{{ cat.slug }}" class="group relative rounded-2xl overflow-hidden border border-gray-800 hover:border-[#317888]/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#317888]/10" style="background-color: rgb(26,26,30);">
+                <a href="/category/{{ cat._id }}" class="group relative rounded-2xl overflow-hidden border border-gray-800 hover:border-[#317888]/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#317888]/10" style="background-color: rgb(26,26,30);">
                     <div class="aspect-[4/3] flex items-center justify-center relative overflow-hidden" style="background: linear-gradient(135deg, {{ cat.accent_color }}22, {{ cat.accent_color }}11);">
                         <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style="background: linear-gradient(135deg, {{ cat.accent_color }}33, transparent);"></div>
                         {% if cat.thumbnail %}
@@ -363,7 +363,7 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {% for item in trending_content[:10] %}
             <div class="group relative rounded-xl overflow-hidden border border-gray-800 hover:border-[#317888]/50 transition-all duration-300 cursor-pointer" style="background-color: rgb(18,18,20);"
-                 onclick="window.location.href='/categories/{{ item.category_slug if item.category_slug else '' }}'">
+                 onclick="window.location.href='/category/{{ item.category_id if item.category_id else '' }}'">
 
                 {% if item.media_type == 'image' %}
                 <div class="aspect-[3/4] overflow-hidden relative">
@@ -436,7 +436,7 @@
             <h3 class="text-lg font-bold text-white">Hottest Category</h3>
         </div>
 
-        <a href="/categories/{{ top_category.slug }}" class="group relative flex flex-col sm:flex-row gap-5 rounded-2xl p-5 border border-gray-800 hover:border-[#317888]/50 transition-all duration-300" style="background-color: rgb(18,18,20);">
+        <a href="/category/{{ top_category._id }}" class="group relative flex flex-col sm:flex-row gap-5 rounded-2xl p-5 border border-gray-800 hover:border-[#317888]/50 transition-all duration-300" style="background-color: rgb(18,18,20);">
             <!-- Gradient accent bar -->
             <div class="absolute top-0 left-0 right-0 h-0.5 rounded-t-2xl" style="background: linear-gradient(90deg, {{ top_category.accent_color or '#317888' }}, transparent);"></div>
 
@@ -529,7 +529,7 @@
 
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {% for cat in categories %}
-            <a href="/categories/{{ cat.slug }}" class="group relative rounded-xl overflow-hidden border border-gray-800 hover:border-[#317888]/50 transition-all duration-300 hover:-translate-y-0.5" style="background-color: rgb(18,18,20);">
+            <a href="/category/{{ cat._id }}" class="group relative rounded-xl overflow-hidden border border-gray-800 hover:border-[#317888]/50 transition-all duration-300 hover:-translate-y-0.5" style="background-color: rgb(18,18,20);">
                 <div class="aspect-[16/9] overflow-hidden relative" style="background: {{ cat.accent_color or '#317888' }}18;">
                     {% if cat.thumbnail %}
                     <img src="{{ cat.thumbnail }}" alt="{{ cat.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy">
