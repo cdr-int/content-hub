@@ -261,7 +261,6 @@
     <!-- ── Info highlights strip ── -->
     <!-- Desktop: full icon+label cards  |  Mobile: bare icon + number, no box -->
     <div class="flex justify-between sm:grid sm:grid-cols-4 sm:gap-3 mb-4 sm:mb-6">
-
         <!-- Categories -->
         <div class="flex items-center gap-2">
             <!-- Mobile: icon + number, no box -->
@@ -344,6 +343,17 @@
     </div>
     {% endif %}
 
+    <!-- Temp Messge box -->
+    <div id="tempMessageBox" class="rounded-xl border border-[#317888]/25 p-3 sm:p-4 mb-5 sm:mb-8 flex flex-row items-center justify-between gap3" style="background: rgba(49,120,136,0.06);">
+        <div class="flex items-center gap-3" style="color: white">
+                Currently this site is in development. Please be patient and expect bugs. If you have any questions or concerns, please contact me using the chat feature on the site.<br>
+            When the beta is over, all content from BDL will be moving here. Ths is because of discords new age verification system being so untrustworthy.<br>
+            Anyone that has signed up to Effexor before Monday 09th March will recive a free premium subscription which will never expire.<br>
+            Thanks for supporting Effexor and I hope you enjoy the new site!
+        </div>
+    </div>
+                                                                                                                
+    
     <!-- ── Trending / Most Liked Content ── -->
     {% if trending_content and trending_content|length > 0 %}
     <section class="mb-10">
