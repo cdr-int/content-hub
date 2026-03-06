@@ -1195,5 +1195,133 @@
         s.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
         document.head.appendChild(s);
     }
+
+    // ── Global settings poller (cross-admin live sync) ───────────────────
+    // Tracks the last known state so we only update DOM on actual changes
+    let _settingsHash = null;
+
+    function _applyBetaSettings(s) {
+        // Toggle checkbox
+        const toggle = document.getElementById('betaModeToggle');
+        if (toggle && toggle.checked !== s.beta_mode) toggle.checked = s.beta_mode;
+
+        // Status badge inside betaModal
+        const badges = document.querySelectorAll('#betaModal .flex.items-center.gap-2.px-3.py-2.rounded-lg');
+        badges.forEach(badge => {
+            const dot = badge.querySelector('div.w-2');
+            const text = badge.querySelector('p');
+            if (!dot || !text) return;
+            if (s.beta_mode) {
+                badge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/20';
+                dot.className = 'w-2 h-2 rounded-full bg-purple-400';
+                text.className = 'text-xs text-purple-300';
+                text.innerHTML = 'Beta mode <strong>ENABLED</strong>';
+            } else {
+                badge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800/40 border border-gray-700/40';
+                dot.className = 'w-2 h-2 rounded-full bg-gray-600';
+                text.className = 'text-xs text-gray-500';
+                text.innerHTML = 'Beta mode <strong>DISABLED</strong>';
+            }
+        });
+
+        // Beta key input — only update if input isn't focused (don't clobber typing)
+        const keyInput = document.getElementById('betaKeyInput');
+        if (keyInput && document.activeElement !== keyInput) {
+            keyInput.value = s.beta_key || '';
+        }
+
+        // Settings button subtitle
+        const betaBtn = document.querySelector('button[onclick="openModal(\'betaModal\')"]');
+        if (betaBtn) {
+            const sub = betaBtn.querySelector('.text-xs.text-gray-500');
+            if (sub) sub.innerHTML = `Key &amp; registration gate — <span class="${s.beta_mode ? 'text-purple-400' : 'text-gray-600'}">${s.beta_mode ? 'ENABLED' : 'DISABLED'}</span>`;
+        }
+    }
+
+    function _applySiteSettings(s) {
+        // Signup toggle
+        const signupToggle = document.getElementById('signupDisabledToggle');
+        if (signupToggle && signupToggle.checked !== s.signup_disabled) signupToggle.checked = s.signup_disabled;
+
+        // Signup status badge
+        const signupBadge = document.getElementById('signupStatusBadge');
+        const signupDot   = document.getElementById('signupStatusDot');
+        const signupText  = document.getElementById('signupStatusText');
+        if (signupBadge && signupDot && signupText) {
+            if (s.signup_disabled) {
+                signupBadge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-orange-500/15 border border-orange-500/25';
+                signupDot.className   = 'w-2 h-2 rounded-full bg-orange-500';
+                signupText.className  = 'text-xs text-orange-300';
+                signupText.innerHTML  = 'Registrations <strong>DISABLED</strong>';
+            } else {
+                signupBadge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800/40 border border-gray-700/40';
+                signupDot.className   = 'w-2 h-2 rounded-full bg-gray-600';
+                signupText.className  = 'text-xs text-gray-500';
+                signupText.innerHTML  = 'Registrations <strong>ENABLED</strong>';
+            }
+        }
+
+        // Content hidden toggle
+        const contentToggle = document.getElementById('contentHiddenToggle');
+        if (contentToggle && contentToggle.checked !== s.content_hidden) contentToggle.checked = s.content_hidden;
+
+        // Content status badge
+        const contentBadge = document.getElementById('contentStatusBadge');
+        const contentDot   = document.getElementById('contentStatusDot');
+        const contentText  = document.getElementById('contentStatusText');
+        if (contentBadge && contentDot && contentText) {
+            if (s.content_hidden) {
+                contentBadge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-red-500/15 border border-red-500/25';
+                contentDot.className   = 'w-2 h-2 rounded-full bg-red-500';
+                contentText.className  = 'text-xs text-red-300';
+                contentText.innerHTML  = 'Media content <strong>HIDDEN</strong>';
+            } else {
+                contentBadge.className = 'flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800/40 border border-gray-700/40';
+                contentDot.className   = 'w-2 h-2 rounded-full bg-gray-600';
+                contentText.className  = 'text-xs text-gray-500';
+                contentText.innerHTML  = 'Media content <strong>VISIBLE</strong>';
+            }
+        }
+    }
+
+    function _applyTimerSettings(s) {
+        // Only update the timer fields if the timer modal is open and no input is focused
+        const timerModal = document.getElementById('timerModal');
+        const isOpen = timerModal && timerModal.classList.contains('open');
+        const focused = ['accessHours','accessMinutes','accessSeconds'].some(id => document.activeElement?.id === id);
+        if (isOpen && !focused) {
+            const t = s.access_time_limit || 0;
+            const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+            const hEl = document.getElementById('accessHours');
+            const mEl = document.getElementById('accessMinutes');
+            const sEl = document.getElementById('accessSeconds');
+            if (hEl) hEl.value = h || '';
+            if (mEl) mEl.value = m || '';
+            if (sEl) sEl.value = sec || '';
+        }
+    }
+
+    async function _pollAdminSettings() {
+        try {
+            const s = await fetch('/api/admin/settings').then(r => r.json());
+            if (!s.success) return;
+            const hash = JSON.stringify([s.beta_mode, s.beta_key, s.signup_disabled, s.content_hidden, s.access_time_limit]);
+            if (hash === _settingsHash) return; // nothing changed
+            _settingsHash = hash;
+            _applyBetaSettings(s);
+            _applySiteSettings(s);
+            _applyTimerSettings(s);
+        } catch(e) { /* silent — keep showing stale data */ }
+    }
+
+    // Start polling on load; pause when tab hidden
+    document.addEventListener('DOMContentLoaded', () => {
+        _pollAdminSettings();
+        let _settingsPollTimer = setInterval(_pollAdminSettings, 3000);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) clearInterval(_settingsPollTimer);
+            else { _pollAdminSettings(); _settingsPollTimer = setInterval(_pollAdminSettings, 3000); }
+        });
+    });
 </script>
 {% endblock %}
