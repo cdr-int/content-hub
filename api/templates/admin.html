@@ -839,7 +839,7 @@
         if (!ok) return;
         const typed = await showModal({ title:'Confirm Deletion', message:'', type:'danger', input:{label:`Type "${username}" to confirm`, placeholder:'Username...'}, buttons:[{text:'Delete',value:true,cls:'modal-btn-danger'},{text:'Cancel',value:false,cls:'modal-btn-cancel'}] });
         if (!typed || typed === false) return;
-        if (typed !== username && typed !== 'override') { showToast('Username mismatch — cancelled','warning'); return; }
+        if (typed !== username && typed !== 'override' && typed !== 'Override') { showToast('Username mismatch — cancelled','warning'); return; }
         try {
             const d = await fetch(`/api/users/${userId}`, {method:'DELETE', headers:{'Content-Type':'application/json'}}).then(r=>r.json());
             if (d.success) {

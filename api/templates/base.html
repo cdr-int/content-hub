@@ -739,5 +739,27 @@
     </script>
 
     {% block scripts %}{% endblock %}
+
+    {% if session.get('user_id') %}
+    <script>
+    // Poll every 5s to detect if this account has been deleted or session invalidated
+    (function() {
+        function _checkSession() {
+            fetch('/api/auth/check', { credentials: 'same-origin' })
+                .then(r => { if (r.status === 401) window.location.href = '/login'; })
+                .catch(() => {}); // silent on network error — don't boot on flaky connection
+        }
+        let _sessionTimer = setInterval(_checkSession, 5000);
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                clearInterval(_sessionTimer);
+            } else {
+                _checkSession(); // immediate check on tab focus
+                _sessionTimer = setInterval(_checkSession, 5000);
+            }
+        });
+    })();
+    </script>
+    {% endif %}
 </body>
 </html>

@@ -612,6 +612,19 @@ def logout():
     return redirect(url_for('index'))
 
 
+@app.route('/api/auth/check')
+def auth_check():
+    """Lightweight session validity check. Returns 401 if user no longer exists."""
+    if 'user_id' not in session:
+        return jsonify({'authenticated': False}), 401
+    user = users_collection.find_one({'_id': ObjectId(session['user_id'])},
+                                     {'_id': 1})
+    if not user:
+        session.clear()
+        return jsonify({'authenticated': False}), 401
+    return jsonify({'authenticated': True})
+
+
 @app.route('/settings')
 @login_required
 def settings():
