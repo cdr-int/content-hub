@@ -222,7 +222,26 @@
     ::-webkit-scrollbar-corner { background: transparent; }
     * { scrollbar-width: thin; scrollbar-color: rgba(49,120,136,0.35) transparent; }
 
-    /* ── Folder picker selected state ── */
+    /* Lazy-load placeholder — before src is set */
+    .lazy-img:not([src]) {
+        background: #1f2937;
+        min-height: 120px;
+    }
+
+    /* Keep media-item visible while image is loading.
+       aspect-ratio reserves space so overflow:hidden on the card
+       never clips a 0px-tall image during the load phase. */
+    .media-item {
+        aspect-ratio: 4 / 3;
+        overflow: hidden;
+        background: #1f2937;
+    }
+    .media-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
     .picker-item-selected {
         background: rgba(49,120,136,0.18);
         border: 1px solid rgba(49,120,136,0.45);
@@ -429,7 +448,7 @@
                              data-title="{{ item.title }}"
                              data-caption="{{ item.caption }}"
                              onclick="openLightbox(this.dataset.url, 'image', this.dataset.title, this.dataset.caption)">
-                            <img src="{{ item.media_url }}" alt="{{ item.title }}" loading="lazy" class="w-full h-auto">
+                            <img data-src="{{ item.media_url }}" alt="{{ item.title }}" loading="lazy" class="w-full h-auto lazy-img" referrerpolicy="no-referrer">
                             {% if item.title or item.caption %}
                             <div class="content-overlay">
                                 {% if item.title %}<div class="content-overlay-title">{{ item.title }}</div>{% endif %}
@@ -587,7 +606,7 @@
 <!-- Lightbox -->
 <div id="lightbox" class="lightbox" onclick="closeLightbox()">
     <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
-    <img id="lightbox-image" class="lightbox-content" onclick="event.stopPropagation()">
+    <img id="lightbox-image" class="lightbox-content" onclick="event.stopPropagation()" referrerpolicy="no-referrer">
     <div id="lightbox-info" class="lightbox-info" onclick="event.stopPropagation()">
         <div id="lightbox-title" class="lightbox-title"></div>
         <div id="lightbox-caption" class="lightbox-caption"></div>
@@ -1330,14 +1349,14 @@
 
                     if (item.media_type === 'image') {
                         html += `
-                            <div class="media-item" data-url="${item.media_url||''}" data-title="${escapeHtml(item.title||'')}" data-caption="${escapeHtml(item.caption||'')}" onclick="openLightbox(this.dataset.url, 'image', this.dataset.title, this.dataset.caption)">
-                                <img src="${item.media_url||''}" alt="${escapeHtml(item.title||'')}" loading="lazy" class="w-full h-auto">
+                            <div class="media-item" data-url="${escapeHtml(item.media_url||'')}" data-title="${escapeHtml(item.title||'')}" data-caption="${escapeHtml(item.caption||'')}" onclick="openLightbox(this.dataset.url, 'image', this.dataset.title, this.dataset.caption)">
+                                <img data-src="${escapeHtml(item.media_url||'')}" alt="${escapeHtml(item.title||'')}" class="w-full h-auto lazy-img" referrerpolicy="no-referrer" onerror="this.style.opacity='0.3';this.title='Failed: '+this.src;">
                                 ${(item.title||item.caption) ? `<div class="content-overlay">${item.title?`<div class="content-overlay-title">${escapeHtml(item.title)}</div>`:''} ${item.caption?`<div class="content-overlay-caption">${escapeHtml(item.caption)}</div>`:''}</div>` : ''}
                             </div>`;
                     } else if (item.media_type === 'video') {
                         html += `
                             <div class="relative">
-                                <video controls class="w-full h-auto"><source src="${escapeHtml(item.media_url)}" type="video/mp4"></video>
+                                <video controls class="w-full h-auto"><source src="${escapeHtml(item.media_url||'')}" type="video/mp4"></video>
                                 ${(item.title||item.caption) ? `<div class="content-overlay">${item.title?`<div class="content-overlay-title">${escapeHtml(item.title)}</div>`:''} ${item.caption?`<div class="content-overlay-caption">${escapeHtml(item.caption)}</div>`:''}</div>` : ''}
                             </div>`;
                     } else {
@@ -1372,21 +1391,8 @@
                 });
                 html += '</div>';
                 container.innerHTML = html;
-
-                // Check favorites for newly loaded items
-                container.querySelectorAll('.favorite-btn').forEach(btn => {
-                    const contentId = btn.dataset.contentId;
-                    fetch(`/api/favorites/check/${contentId}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data.is_favorited) {
-                                btn.dataset.favorited = 'true';
-                                btn.classList.remove('bg-black/70','hover:bg-black/90');
-                                btn.classList.add('bg-red-500','hover:bg-red-600');
-                                btn.querySelector('.heart-icon').setAttribute('fill','currentColor');
-                            }
-                        }).catch(() => {});
-                });
+                observeLazyImages(container);
+                checkFavoritesBatched(container.querySelectorAll('.favorite-btn'));
             })
             .catch(() => {
                 document.getElementById('folderContent').innerHTML = '<div class="text-center py-8"><p class="text-red-400">Failed to load content</p></div>';
@@ -1628,26 +1634,115 @@
             .catch(error => console.error('Error:', error));
     }
 
+    // ============================
+    // BATCHED FAVORITES CHECK
+    // ============================
+
+    // Apply favorited state to a button
+    function applyFavoritedState(btn) {
+        btn.dataset.favorited = 'true';
+        btn.classList.remove('bg-black/70','hover:bg-black/90');
+        btn.classList.add('bg-red-500','hover:bg-red-600');
+        btn.querySelector('.heart-icon').setAttribute('fill','currentColor');
+    }
+
+    // Check favorites in batches to avoid hammering the server.
+    // Tries /api/favorites/check-bulk first (POST with {ids:[...]} → {favorited:[...]}),
+    // and falls back to sequential individual checks (10 at a time, 100ms apart) if the
+    // bulk endpoint doesn't exist (404) or returns an error.
+    async function checkFavoritesBatched(buttons) {
+        if (!buttons.length) return;
+
+        const ids = Array.from(buttons).map(b => b.dataset.contentId);
+        const btnMap = {};
+        buttons.forEach(b => { btnMap[b.dataset.contentId] = b; });
+
+        // --- Try bulk endpoint first ---
+        try {
+            const res = await fetch('/api/favorites/check-bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                // Expected: { favorited: ['id1', 'id2', ...] }
+                if (Array.isArray(data.favorited)) {
+                    data.favorited.forEach(id => {
+                        if (btnMap[id]) applyFavoritedState(btnMap[id]);
+                    });
+                    return; // done — bulk succeeded
+                }
+            }
+        } catch (_) { /* bulk endpoint not available, fall through */ }
+
+        // --- Fallback: sequential batches of 10, 100ms between batches ---
+        const BATCH_SIZE = 10;
+        const DELAY_MS = 100;
+        for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+            const batch = ids.slice(i, i + BATCH_SIZE);
+            await Promise.all(batch.map(id =>
+                fetch(`/api/favorites/check/${id}`)
+                    .then(r => r.json())
+                    .then(data => { if (data.is_favorited && btnMap[id]) applyFavoritedState(btnMap[id]); })
+                    .catch(() => {})
+            ));
+            if (i + BATCH_SIZE < ids.length) {
+                await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+            }
+        }
+    }
+
     // Check favorites on page load
     document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.favorite-btn').forEach(button => {
-            const contentId = button.dataset.contentId;
-            fetch(`/api/favorites/check/${contentId}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.is_favorited) {
-                        button.dataset.favorited = 'true';
-                        button.classList.remove('bg-black/70','hover:bg-black/90');
-                        button.classList.add('bg-red-500','hover:bg-red-600');
-                        button.querySelector('.heart-icon').setAttribute('fill','currentColor');
-                    }
-                }).catch(() => {});
-        });
+        checkFavoritesBatched(document.querySelectorAll('.favorite-btn'));
     });
 
     // ============================
     // HELPER
     // ============================
+
+    // ============================
+    // INTERSECTION OBSERVER LAZY LOADER
+    // ============================
+    // Watches .lazy-img elements (data-src instead of src) and only sets src
+    // when they scroll into the viewport (+ 200px margin). This prevents all
+    // 200 images firing requests at once on page load.
+
+    const lazyImageObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                if (img.dataset.src) {
+                    img.src = img.dataset.src;
+                    img.removeAttribute('data-src');
+                }
+                lazyImageObserver.unobserve(img);
+            }
+        });
+    }, { rootMargin: '200px 0px' }); // start loading 200px before entering viewport
+
+    function observeLazyImages(root) {
+        // If loading into a modal/off-screen container, skip the IntersectionObserver
+        // (it never fires for elements inside display:none parents) and set src directly.
+        // Only use the observer for the main page scroll area (root === undefined/null).
+        if (root) {
+            root.querySelectorAll('img.lazy-img[data-src]').forEach(img => {
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+            });
+        } else {
+            (document).querySelectorAll('img.lazy-img[data-src]').forEach(img => {
+                lazyImageObserver.observe(img);
+            });
+        }
+    }
+
+    // Observe images already in the DOM
+    document.addEventListener('DOMContentLoaded', observeLazyImages);
+
+    // Also called after folder content is injected dynamically
+    // (hooked into loadFolderContent via the existing container.innerHTML assignment)
 
     function escapeHtml(str) {
         if (!str) return '';
