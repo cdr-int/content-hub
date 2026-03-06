@@ -1386,6 +1386,18 @@
             const hash  = JSON.stringify(users.map(u => u._id + String(u.is_admin) + String(u.is_subscribed)));
             if (hash === _usersHash) return;
             _usersHash = hash;
+            // Remove rows for deleted users
+            const liveIds = new Set(users.map(u => u._id));
+            document.querySelectorAll('.user-row[data-user-id]').forEach(row => {
+                if (!liveIds.has(row.dataset.userId)) {
+                    row.style.transition = 'opacity 0.3s, transform 0.3s';
+                    row.style.opacity = '0';
+                    row.style.transform = 'scale(0.95)';
+                    setTimeout(() => row.remove(), 300);
+                    // Close edit modal if it was open for this user
+                    if (_editUserId === row.dataset.userId) closeUserEditModal();
+                }
+            });
             // Update existing rows
             users.forEach(user => {
                 const row = document.querySelector(`.user-row[data-user-id="${user._id}"]`);
