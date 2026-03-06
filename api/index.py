@@ -13,14 +13,32 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from apscheduler.schedulers.background import BackgroundScheduler
 import atexit
+import threading
+import time
+from collections import OrderedDict
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'abc123')
 CORS(app)
 
 # MongoDB Connection
+# maxPoolSize  — cap connections per MongoClient instance (default is 100).
+#   With multiple gunicorn workers each worker gets its own pool, so
+#   total connections = workers × maxPoolSize.  Setting this to 10 means
+#   4 workers → 40 connections max, well inside the 500 free-plan limit.
+# minPoolSize  — keep a small number of connections warm so the first
+#   request after idle doesn't pay a cold-connect penalty.
+# serverSelectionTimeoutMS / socketTimeoutMS — fail fast instead of
+#   holding a connection slot open on a slow/dead query.
 MONGO_URI = os.environ.get('MONGO_API_KEY')
-client = MongoClient(MONGO_URI)
+client = MongoClient(
+    MONGO_URI,
+    maxPoolSize=10,
+    minPoolSize=1,
+    serverSelectionTimeoutMS=5000,
+    socketTimeoutMS=10000,
+    connectTimeoutMS=5000,
+)
 db = client['contenthub']
 
 # Collections
@@ -71,8 +89,11 @@ def cleanup_expired_data():
 
 
 # Start background scheduler
+# Run cleanup every 5 minutes instead of every second — verification codes
+# have a 15-minute TTL so this is still more than frequent enough, and it
+# reduces background DB queries from ~86,400/day to ~288/day.
 scheduler = BackgroundScheduler()
-scheduler.add_job(cleanup_expired_data, 'interval', seconds=1)
+scheduler.add_job(cleanup_expired_data, 'interval', minutes=5)
 scheduler.start()
 atexit.register(lambda: scheduler.shutdown())
 
@@ -186,20 +207,72 @@ def get_accessible_categories():
     return pinned_categories + paid_categories + free_categories
 
 
+# ── Context-processor cache ───────────────────────────────────────────────────
+# inject_categories runs on EVERY template render.  Without caching this means
+# 2–3 DB round-trips per page view per user.  We cache the result per user_id
+# for 30 seconds — sidebar changes appear within half a minute, but the common
+# case (no change) costs zero DB queries.
+_ctx_cache: dict = {}  # { user_id: {'data': {...}, 'ts': float} }
+_CTX_TTL = 30  # seconds
+_ctx_lock = threading.Lock()
+
+
+def _ctx_cache_get(user_id):
+    with _ctx_lock:
+        entry = _ctx_cache.get(user_id)
+        if entry and (time.time() - entry['ts']) < _CTX_TTL:
+            return entry['data']
+        return None
+
+
+def _ctx_cache_set(user_id, data):
+    with _ctx_lock:
+        _ctx_cache[user_id] = {'data': data, 'ts': time.time()}
+        # Evict entries for users not seen in last 5 minutes to avoid unbounded growth
+        cutoff = time.time() - 300
+        stale = [k for k, v in _ctx_cache.items() if v['ts'] < cutoff]
+        for k in stale:
+            del _ctx_cache[k]
+
+
+def invalidate_ctx_cache(user_id=None):
+    """Call this after any action that changes categories or pins."""
+    with _ctx_lock:
+        if user_id:
+            _ctx_cache.pop(str(user_id), None)
+        else:
+            _ctx_cache.clear()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+
+
 # Context processor to make categories available in all templates
 @app.context_processor
 def inject_categories():
+    # content_hidden is site-wide and rarely changes — cache it too
+    user_id = session.get('user_id')
+
+    if user_id:
+        cached = _ctx_cache_get(str(user_id))
+        if cached:
+            return cached
+
     content_hidden_doc = db['secrets'].find_one({'key': 'content_hidden'})
     content_hidden = bool(
         content_hidden_doc
         and content_hidden_doc.get('value', 'false').lower() == 'true')
-    if 'user_id' in session:
+
+    if user_id:
         cats = get_accessible_categories()
-        return {
+        result = {
             'sidebar_categories': cats,
             'categories': cats,
             'global_content_hidden': content_hidden
         }
+        _ctx_cache_set(str(user_id), result)
+        return result
+
     return {
         'sidebar_categories': [],
         'categories': [],
@@ -1243,6 +1316,9 @@ def update_category(category_id):
     categories_collection.update_one({'_id': ObjectId(category_id)},
                                      {'$set': update_data})
 
+    # Category name/visibility changed — clear sidebar cache for all users
+    invalidate_ctx_cache()
+
     return jsonify({'success': True})
 
 
@@ -1280,6 +1356,9 @@ def pin_category(category_id):
         }},
         upsert=True)
 
+    # Sidebar order changed for this user — bust their context cache immediately
+    invalidate_ctx_cache(str(session['user_id']))
+
     return jsonify({'success': True})
 
 
@@ -1291,6 +1370,7 @@ def delete_category(category_id):
     folders_collection.delete_many({'category_id': category_id})
     # Delete all content in this category
     content_collection.delete_many({'category_id': category_id})
+    invalidate_ctx_cache()
     return jsonify({'success': True})
 
 
