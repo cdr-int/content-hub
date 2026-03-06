@@ -392,27 +392,8 @@
             <button onclick="closeModal('categoriesModal')" class="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-700/50 transition-colors"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
         <div class="modal-body">
-            <div class="rounded-xl border border-gray-700/50 overflow-hidden max-h-80 overflow-y-auto" style="background: rgba(255,255,255,0.022)">
-                {% for category in categories %}
-                <div class="flex items-center gap-3 px-4 py-3 {% if not loop.last %}border-b border-gray-700/30{% endif %}">
-                    <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: {{ category.accent_color }}"></div>
-                    <div class="flex-1 min-w-0 flex items-center gap-2">
-                        <a href="/category/{{ category._id }}" class="font-medium text-gray-200 hover:text-[#5eead4] truncate text-sm transition">{{ category.name }}</a>
-                    </div>
-                    <span class="px-2 py-0.5 text-xs rounded-full flex-shrink-0 {% if category.is_free %}bg-green-500/20 text-green-400{% else %}bg-purple-500/20 text-purple-400{% endif %}">{% if category.is_free %}Free{% else %}Premium{% endif %}</span>
-                    <div class="flex items-center gap-1 flex-shrink-0">
-                        <a href="/category/{{ category._id }}" class="p-1.5 text-[#317888] hover:bg-[#317888]/20 rounded-lg transition" title="Edit">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                        </a>
-                        <button onclick="deleteCategory('{{ category._id }}')" class="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg transition" title="Delete">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </button>
-                    </div>
-                </div>
-                {% endfor %}
-                {% if categories|length == 0 %}
-                <div class="px-4 py-8 text-center text-sm text-gray-600">No categories yet</div>
-                {% endif %}
+            <div id="adminCategoriesList" class="rounded-xl border border-gray-700/50 overflow-hidden max-h-80 overflow-y-auto" style="background: rgba(255,255,255,0.022)">
+                <div class="px-4 py-8 text-center text-sm text-gray-600">Loading...</div>
             </div>
         </div>
     </div>
@@ -587,7 +568,10 @@
     });
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') {
-            document.querySelectorAll('.modal-backdrop.open').forEach(el => closeModal(el.id));
+            document.querySelectorAll('.modal-backdrop.open').forEach(el => {
+                if (el.id === 'categoriesModal') closeCategoriesModal();
+                else closeModal(el.id);
+            });
             closeUserEditModal();
             closeMessagesModal();
         }
@@ -881,7 +865,11 @@
         if(!ok) return;
         try {
             const d = await fetch(`/api/categories/${categoryId}`, {method:'DELETE'}).then(r=>r.json());
-            if(d.success){ showToast('Category deleted','success'); setTimeout(()=>location.reload(),800); }
+            if(d.success){
+                showToast('Category deleted','success');
+                _adminCatHash = null; // force re-render
+                await _loadAdminCategories();
+            }
             else showToast('Failed to delete category','error');
         } catch(e) { showToast('Network error','error'); }
     }
@@ -897,6 +885,67 @@
         d.appendChild(document.createTextNode(String(t)));
         return d.innerHTML;
     }
+
+    // ── Admin Categories Modal — dynamic load & poll ─────────────────────
+    let _adminCatHash = null;
+    let _adminCatPollTimer = null;
+
+    function _renderAdminCategoryList(cats) {
+        const list = document.getElementById('adminCategoriesList');
+        if (!list) return;
+        if (!cats || cats.length === 0) {
+            list.innerHTML = '<div class="px-4 py-8 text-center text-sm text-gray-600">No categories yet</div>';
+            return;
+        }
+        list.innerHTML = cats.map((cat, i) => `
+            <div class="flex items-center gap-3 px-4 py-3 ${i < cats.length-1 ? 'border-b border-gray-700/30' : ''}">
+                <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${escHtml(cat.accent_color || '#4F46E5')}"></div>
+                <div class="flex-1 min-w-0 flex items-center gap-2">
+                    <a href="/category/${escHtml(cat._id)}" class="font-medium text-gray-200 hover:text-[#5eead4] truncate text-sm transition">${escHtml(cat.name)}</a>
+                </div>
+                <span class="px-2 py-0.5 text-xs rounded-full flex-shrink-0 ${cat.is_free ? 'bg-green-500/20 text-green-400' : 'bg-purple-500/20 text-purple-400'}">${cat.is_free ? 'Free' : 'Premium'}</span>
+                <div class="flex items-center gap-1 flex-shrink-0">
+                    <a href="/category/${escHtml(cat._id)}" class="p-1.5 text-[#317888] hover:bg-[#317888]/20 rounded-lg transition" title="View">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </a>
+                    <button onclick="deleteCategory('${escHtml(cat._id)}')" class="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg transition" title="Delete">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                </div>
+            </div>`).join('');
+    }
+
+    async function _loadAdminCategories() {
+        try {
+            const cats = await fetch('/api/categories').then(r => r.json());
+            const hash = JSON.stringify(cats.map(c => c._id + c.name + c.is_free + c.accent_color));
+            if (hash !== _adminCatHash) {
+                _adminCatHash = hash;
+                _renderAdminCategoryList(cats);
+            }
+        } catch(e) { /* silent */ }
+    }
+
+    function openCategoriesModal() {
+        openModal('categoriesModal');
+        _adminCatHash = null;
+        _loadAdminCategories();
+        clearInterval(_adminCatPollTimer);
+        _adminCatPollTimer = setInterval(_loadAdminCategories, 3000);
+    }
+    function closeCategoriesModal() {
+        closeModal('categoriesModal');
+        clearInterval(_adminCatPollTimer);
+    }
+    // Wire up the categories modal button and backdrop to use our wrappers
+    document.addEventListener('DOMContentLoaded', () => {
+        const catBtn = document.querySelector('button[onclick="openModal(\'categoriesModal\')"]');
+        if (catBtn) catBtn.setAttribute('onclick', 'openCategoriesModal()');
+        const catModal = document.getElementById('categoriesModal');
+        if (catModal) catModal.addEventListener('click', function(e) {
+            if (e.target === this) closeCategoriesModal();
+        });
+    });
     function adminFormatTime(iso) {
         const date = new Date(iso), now = new Date();
         const diffDays = Math.floor((now - date) / 86400000);

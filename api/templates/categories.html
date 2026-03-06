@@ -88,314 +88,298 @@
         </div>
     </div>
 
-    {% set pinned_categories = categories | selectattr('is_user_pinned', 'equalto', true) | list %}
-    {% set unpinned_categories = categories | rejectattr('is_user_pinned', 'equalto', true) | list %}
-
-    <!-- Content Hidden Banner (non-admins only) -->
-    {% if content_hidden and not is_admin %}
-    <div class="flex flex-col items-center justify-center py-20 text-center">
-        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-800 mb-6">
-            <svg class="w-10 h-10 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+    <!-- Dynamic categories container — rendered entirely by JS -->
+    <div id="categoriesContainer">
+        <div class="flex items-center justify-center py-20">
+            <svg class="w-6 h-6 text-gray-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
             </svg>
         </div>
-        <h3 class="text-2xl font-bold text-gray-300 mb-3">Content Unavailable</h3>
-        <p class="text-gray-500 max-w-md">Content is currently hidden. Please check back later.</p>
-    </div>
-    {% else %}
-
-    <!-- Pinned Categories Grid -->
-    {% if pinned_categories|length > 0 %}
-    <div class="mb-6">
-        <div class="flex items-center gap-2 mb-4">
-            <svg class="w-5 h-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/>
-            </svg>
-            <h3 class="text-lg font-semibold text-gray-300">Pinned Categories</h3>
-        </div>
-        <div id="pinnedCategoriesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {% for category in pinned_categories %}
-            <div class="category-card relative rounded-xl shadow-md hover:shadow-2xl transition-all duration-300" style="background-color: rgb(18, 18, 20); overflow: visible;" data-name="{{ category.name.lower() }}" data-pinned="true">
-                <!-- Pin Button (Top Left - outside overflow) -->
-                <button
-                    onclick="event.stopPropagation(); togglePin('{{ category._id }}', true);"
-                    class="absolute -top-2 -left-2 z-30 p-2 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-all shadow-lg"
-                    title="Unpin category"
-                >
-                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/>
-                    </svg>
-                </button>
-
-                <!-- Clickable Card Area -->
-                <a href="{% if is_admin or is_subscribed or category.is_free %}/category/{{ category._id }}{% else %}#{% endif %}" 
-                   {% if not is_admin and not is_subscribed and not category.is_free %}onclick="event.preventDefault(); window.location.href='/premium';"{% endif %}
-                   class="block group rounded-xl overflow-hidden">
-                    <!-- Card Header with Banner or Gradient -->
-                    <div class="relative h-32 overflow-hidden">
-                        {% if category.banner_image %}
-                        <img src="{{ category.banner_image }}" alt="{{ category.name }}" class="absolute inset-0 w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/10"></div>
-                        {% else %}
-                        <div class="absolute inset-0 gradient-bg" style="--gradient-start: {{ category.accent_color }}; --gradient-end: {{ category.accent_color }}dd;">
-                            <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;1&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
-                        </div>
-                        {% endif %}
-
-                        <!-- Status Badges (Top Right) -->
-                        <div class="absolute top-4 right-4 flex flex-col items-end gap-2">
-                            {% if not is_admin and not is_subscribed and not category.is_free %}
-                            <span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg bg-purple-500 flex items-center gap-1">
-                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                </svg>
-                                Premium
-                            </span>
-                            <span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg bg-gray-700 flex items-center gap-1">
-                                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                Locked
-                            </span>
-                            {% else %}
-                            <span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg {% if category.is_free %}bg-green-500{% else %}bg-purple-500{% endif %}">
-                                {% if category.is_free %}
-                                <svg class="w-3 h-3 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                                </svg>
-                                Free
-                                {% else %}
-                                <svg class="w-3 h-3 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                </svg>
-                                Premium
-                                {% endif %}
-                            </span>
-                            {% endif %}
-                        </div>
-
-                        <!-- Category Name -->
-                        <div class="absolute bottom-4 left-6">
-                            <h3 class="text-2xl font-bold text-white drop-shadow-lg">{{ category.name }}</h3>
-                        </div>
-                    </div>
-
-                    <!-- Card Content -->
-                    <div class="p-6">
-                        {% if category.description %}
-                        <p class="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-3">
-                            {{ category.description }}
-                        </p>
-                        {% else %}
-                        <p class="text-gray-500 text-sm leading-relaxed mb-4 italic">
-                            Click to view content in this category
-                        </p>
-                        {% endif %}
-
-                        <!-- Card Footer -->
-                        <div class="flex items-center justify-between pt-4 border-t border-gray-700">
-                            <div class="flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full" style="background-color: {{ category.accent_color }}"></div>
-                                <span class="text-xs text-gray-500 font-medium">View Content</span>
-                            </div>
-                            <svg class="w-5 h-5 text-gray-500 group-hover:translate-x-1 transition-all" style="color: {{ category.accent_color }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            {% endfor %}
-        </div>
     </div>
 
-    <!-- Separator line between pinned and unpinned -->
-    {% if pinned_categories|length > 0 and unpinned_categories|length > 0 %}
-    <div class="my-8 border-t border-gray-700"></div>
-    {% endif %}
-    {% endif %}
-
-    <!-- Regular Categories Grid -->
-    {% if unpinned_categories|length > 0 %}
-    {% if pinned_categories|length > 0 %}
-    <div class="mb-4">
-        <h3 class="text-lg font-semibold text-gray-300">All Categories</h3>
-    </div>
-    {% endif %}
-    <div id="categoriesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {% for category in unpinned_categories %}
-        <div class="category-card relative rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 group" style="background-color: rgb(18, 18, 20); overflow: visible;" data-name="{{ category.name.lower() }}" data-pinned="false">
-            <!-- Pin Button (Top Left - outside overflow) -->
-            <button
-                onclick="event.stopPropagation(); togglePin('{{ category._id }}', false);"
-                class="absolute -top-2 -left-2 z-30 p-2 rounded-full bg-gray-700 text-gray-400 hover:bg-yellow-500 hover:text-white transition-all shadow-lg opacity-0 group-hover:opacity-100"
-                title="Pin category"
-            >
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
-                </svg>
-            </button>
-
-            <!-- Clickable Card Area -->
-            <a href="{% if is_admin or is_subscribed or category.is_free %}/category/{{ category._id }}{% else %}#{% endif %}" 
-               {% if not is_admin and not is_subscribed and not category.is_free %}onclick="event.preventDefault(); window.location.href='/premium';"{% endif %}
-               class="block group rounded-xl overflow-hidden">
-                <!-- Same card content as pinned categories -->
-                <div class="relative h-32 overflow-hidden">
-                    {% if category.banner_image %}
-                    <img src="{{ category.banner_image }}" alt="{{ category.name }}" class="absolute inset-0 w-full h-full object-cover">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/10"></div>
-                    {% else %}
-                    <div class="absolute inset-0 gradient-bg" style="--gradient-start: {{ category.accent_color }}; --gradient-end: {{ category.accent_color }}dd;">
-                        <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;1&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
-                    </div>
-                    {% endif %}
-
-                    <div class="absolute top-4 right-4 flex flex-col items-end gap-2">
-                        {% if not is_admin and not is_subscribed and not category.is_free %}
-                        <span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg bg-purple-500 flex items-center gap-1">
-                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                            </svg>
-                            Premium
-                        </span>
-                        <span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg bg-gray-700 flex items-center gap-1">
-                            <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                            Locked
-                        </span>
-                        {% else %}
-                        <span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg {% if category.is_free %}bg-green-500{% else %}bg-purple-500{% endif %}">
-                            {% if category.is_free %}
-                            <svg class="w-3 h-3 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-                            </svg>
-                            Free
-                            {% else %}
-                            <svg class="w-3 h-3 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                            </svg>
-                            Premium
-                            {% endif %}
-                        </span>
-                        {% endif %}
-                    </div>
-
-                    <div class="absolute bottom-4 left-6">
-                        <h3 class="text-2xl font-bold text-white drop-shadow-lg">{{ category.name }}</h3>
-                    </div>
-                </div>
-
-                <div class="p-6">
-                    {% if category.description %}
-                    <p class="text-gray-400 text-sm leading-relaxed mb-4 line-clamp-3">
-                        {{ category.description }}
-                    </p>
-                    {% else %}
-                    <p class="text-gray-500 text-sm leading-relaxed mb-4 italic">
-                        Click to view content in this category
-                    </p>
-                    {% endif %}
-
-                    <div class="flex items-center justify-between pt-4 border-t border-gray-700">
-                        <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full" style="background-color: {{ category.accent_color }}"></div>
-                            <span class="text-xs text-gray-500 font-medium">View Content</span>
-                        </div>
-                        <svg class="w-5 h-5 text-gray-500 group-hover:translate-x-1 transition-all" style="color: {{ category.accent_color }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                        </svg>
-                    </div>
-                </div>
-            </a>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    {% if categories|length == 0 %}
-    <div class="text-center py-20">
-        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-800 mb-4">
-            <svg class="w-10 h-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-            </svg>
-        </div>
-        <h3 class="text-xl font-semibold text-gray-300 mb-2">No categories available</h3>
-        <p class="text-gray-500 mb-4">There are no categories to display at the moment.</p>
-        {% if is_admin %}
-        <button onclick="openCreateCategoryModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-[#21525D] text-white rounded-lg hover:bg-[#1A1A1E] transition">
-            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Create Your First Category
-        </button>
-        {% endif %}
-    </div>
-    {% endif %}
-
-    {% endif %}{# end content_hidden check #}
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    function togglePin(categoryId, currentlyPinned) {
-        fetch(`/api/categories/${categoryId}/pin`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ is_pinned: !currentlyPinned })
-        })
-        .then(response => response.json())
-        .then(data => {
+    // ── Config injected from server ─────────────────────────────────────
+    const PAGE_IS_ADMIN      = {{ 'true' if is_admin else 'false' }};
+    const PAGE_IS_SUBSCRIBED = {{ 'true' if is_subscribed else 'false' }};
+    const PAGE_CONTENT_HIDDEN = {{ 'true' if content_hidden else 'false' }};
+
+    // ── State ────────────────────────────────────────────────────────────
+    let _catStateHash = null;   // change-detection hash
+    let _userPinnedIds = new Set(); // current user's pinned category ids
+    let _pollTimer = null;
+    let _isRendering = false;
+
+    // Initialise pinned set from server-rendered data (avoids flash)
+    {% for category in categories %}
+    {% if category.is_user_pinned %}_userPinnedIds.add('{{ category._id }}');{% endif %}
+    {% endfor %}
+
+    // ── Utility ──────────────────────────────────────────────────────────
+    function _hashCategories(cats) {
+        // Lightweight change-detection: stringify relevant fields
+        return JSON.stringify(cats.map(c => ({
+            id: c._id, name: c.name, desc: c.description,
+            color: c.accent_color, free: c.is_free, banner: c.banner_image
+        })));
+    }
+
+    function _e(tag, attrs, ...children) {
+        const el = document.createElement(tag);
+        Object.entries(attrs || {}).forEach(([k, v]) => {
+            if (k === 'class') el.className = v;
+            else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+            else el.setAttribute(k, v);
+        });
+        children.forEach(c => {
+            if (c == null) return;
+            el.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+        });
+        return el;
+    }
+
+    // ── Card builder ─────────────────────────────────────────────────────
+    function _buildCard(cat, isPinned) {
+        const canAccess = PAGE_IS_ADMIN || PAGE_IS_SUBSCRIBED || cat.is_free;
+        const href = canAccess ? `/category/${cat._id}` : '#';
+
+        // Header: banner or gradient
+        const headerDiv = _e('div', { class: 'relative h-32 overflow-hidden' });
+        if (cat.banner_image) {
+            headerDiv.appendChild(_e('img', {
+                src: cat.banner_image, alt: cat.name,
+                class: 'absolute inset-0 w-full h-full object-cover'
+            }));
+            headerDiv.appendChild(_e('div', { class: 'absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/10' }));
+        } else {
+            const gradDiv = _e('div', {
+                class: 'absolute inset-0',
+                style: `background: linear-gradient(135deg, ${cat.accent_color}cc, ${cat.accent_color}88);`
+            });
+            headerDiv.appendChild(gradDiv);
+        }
+
+        // Badge
+        let badgeHtml;
+        if (!canAccess) {
+            badgeHtml = `<span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg bg-purple-500 flex items-center gap-1">
+                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                Premium</span>
+                <span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg bg-gray-700 flex items-center gap-1">
+                <svg class="w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                Locked</span>`;
+        } else if (cat.is_free) {
+            badgeHtml = `<span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg bg-green-500">
+                <svg class="w-3 h-3 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>Free</span>`;
+        } else {
+            badgeHtml = `<span class="px-3 py-1.5 rounded-full text-xs font-semibold text-white shadow-lg bg-purple-500">
+                <svg class="w-3 h-3 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>Premium</span>`;
+        }
+        const badgeWrap = document.createElement('div');
+        badgeWrap.className = 'absolute top-4 right-4 flex flex-col items-end gap-2';
+        badgeWrap.innerHTML = badgeHtml;
+        headerDiv.appendChild(badgeWrap);
+
+        // Name on banner
+        const nameDiv = _e('div', { class: 'absolute bottom-4 left-6' });
+        nameDiv.appendChild(_e('h3', { class: 'text-2xl font-bold text-white drop-shadow-lg' }, cat.name));
+        headerDiv.appendChild(nameDiv);
+
+        // Card body
+        const descText = cat.description
+            ? _e('p', { class: 'text-gray-400 text-sm leading-relaxed mb-4 line-clamp-3' }, cat.description)
+            : _e('p', { class: 'text-gray-500 text-sm leading-relaxed mb-4 italic' }, 'Click to view content in this category');
+
+        const footerDiv = _e('div', { class: 'flex items-center justify-between pt-4 border-t border-gray-700' });
+        const leftFoot = _e('div', { class: 'flex items-center gap-2' });
+        const dot = _e('div', { class: 'w-2 h-2 rounded-full', style: `background-color: ${cat.accent_color}` });
+        leftFoot.appendChild(dot);
+        leftFoot.appendChild(_e('span', { class: 'text-xs text-gray-500 font-medium' }, 'View Content'));
+        footerDiv.appendChild(leftFoot);
+        const arrowSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        arrowSvg.setAttribute('class', 'w-5 h-5 group-hover:translate-x-1 transition-all');
+        arrowSvg.setAttribute('style', `color: ${cat.accent_color}`);
+        arrowSvg.setAttribute('fill', 'none');
+        arrowSvg.setAttribute('viewBox', '0 0 24 24');
+        arrowSvg.setAttribute('stroke', 'currentColor');
+        arrowSvg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>';
+        footerDiv.appendChild(arrowSvg);
+
+        const bodyDiv = _e('div', { class: 'p-6' });
+        bodyDiv.appendChild(descText);
+        bodyDiv.appendChild(footerDiv);
+
+        // Anchor wrapper
+        const anchor = _e('a', { class: 'block group rounded-xl overflow-hidden', href });
+        if (!canAccess) anchor.addEventListener('click', e => { e.preventDefault(); window.location.href = '/premium'; });
+        anchor.appendChild(headerDiv);
+        anchor.appendChild(bodyDiv);
+
+        // Pin button
+        const pinBtn = document.createElement('button');
+        if (isPinned) {
+            pinBtn.className = 'absolute -top-2 -left-2 z-30 p-2 rounded-full bg-yellow-500 text-white hover:bg-yellow-600 transition-all shadow-lg';
+            pinBtn.title = 'Unpin category';
+            pinBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/></svg>`;
+        } else {
+            pinBtn.className = 'absolute -top-2 -left-2 z-30 p-2 rounded-full bg-gray-700 text-gray-400 hover:bg-yellow-500 hover:text-white transition-all shadow-lg opacity-0 group-hover:opacity-100';
+            pinBtn.title = 'Pin category';
+            pinBtn.innerHTML = `<svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>`;
+        }
+        pinBtn.addEventListener('click', e => { e.stopPropagation(); togglePin(cat._id, isPinned); });
+
+        // Outer card div
+        const card = _e('div', {
+            class: `category-card relative rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 ${isPinned ? '' : 'group'}`,
+            style: 'background-color: rgb(18, 18, 20); overflow: visible;',
+            'data-name': cat.name.toLowerCase(),
+            'data-pinned': isPinned ? 'true' : 'false',
+            'data-id': cat._id
+        });
+        card.appendChild(pinBtn);
+        card.appendChild(anchor);
+        return card;
+    }
+
+    // ── Main render ──────────────────────────────────────────────────────
+    function _renderCategories(cats) {
+        const searchTerm = (document.getElementById('categorySearch')?.value || '').toLowerCase();
+        const container = document.getElementById('categoriesContainer');
+        if (!container) return;
+
+        // Split into pinned / unpinned using the current user's pin set
+        const pinned   = cats.filter(c => _userPinnedIds.has(c._id));
+        const unpinned = cats.filter(c => !_userPinnedIds.has(c._id));
+
+        // Apply search filter
+        const filteredPinned   = searchTerm ? pinned.filter(c => c.name.toLowerCase().includes(searchTerm))   : pinned;
+        const filteredUnpinned = searchTerm ? unpinned.filter(c => c.name.toLowerCase().includes(searchTerm)) : unpinned;
+
+        container.innerHTML = '';
+
+        // Content hidden state (non-admins)
+        if (PAGE_CONTENT_HIDDEN && !PAGE_IS_ADMIN) {
+            const hidden = document.createElement('div');
+            hidden.className = 'flex flex-col items-center justify-center py-20 text-center';
+            hidden.innerHTML = `<div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-800 mb-6">
+                <svg class="w-10 h-10 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                </svg></div>
+                <h3 class="text-2xl font-bold text-gray-300 mb-3">Content Unavailable</h3>
+                <p class="text-gray-500 max-w-md">Content is currently hidden. Please check back later.</p>`;
+            container.appendChild(hidden);
+            return;
+        }
+
+        // Empty state
+        if (filteredPinned.length === 0 && filteredUnpinned.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'text-center py-20';
+            empty.innerHTML = `<div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-800 mb-4">
+                <svg class="w-10 h-10 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg></div>
+                <h3 class="text-xl font-semibold text-gray-300 mb-2">${searchTerm ? 'No results found' : 'No categories available'}</h3>
+                <p class="text-gray-500 mb-4">${searchTerm ? 'Try a different search term.' : 'There are no categories to display at the moment.'}</p>
+                ${PAGE_IS_ADMIN && !searchTerm ? `<button onclick="openCreateCategoryModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-[#21525D] text-white rounded-lg hover:bg-[#1A1A1E] transition">
+                    <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    Create Your First Category</button>` : ''}`;
+            container.appendChild(empty);
+            return;
+        }
+
+        // Pinned section
+        if (filteredPinned.length > 0) {
+            const section = document.createElement('div');
+            section.className = 'mb-6';
+            section.innerHTML = `<div class="flex items-center gap-2 mb-4">
+                <svg class="w-5 h-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-300">Pinned Categories</h3></div>`;
+            const grid = document.createElement('div');
+            grid.id = 'pinnedCategoriesGrid';
+            grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6';
+            filteredPinned.forEach(c => grid.appendChild(_buildCard(c, true)));
+            section.appendChild(grid);
+            container.appendChild(section);
+        }
+
+        // Separator
+        if (filteredPinned.length > 0 && filteredUnpinned.length > 0) {
+            const sep = document.createElement('div');
+            sep.className = 'my-8 border-t border-gray-700';
+            container.appendChild(sep);
+        }
+
+        // Unpinned section
+        if (filteredUnpinned.length > 0) {
+            if (filteredPinned.length > 0) {
+                const head = document.createElement('div');
+                head.className = 'mb-4';
+                head.innerHTML = '<h3 class="text-lg font-semibold text-gray-300">All Categories</h3>';
+                container.appendChild(head);
+            }
+            const grid = document.createElement('div');
+            grid.id = 'categoriesGrid';
+            grid.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6';
+            filteredUnpinned.forEach(c => grid.appendChild(_buildCard(c, false)));
+            container.appendChild(grid);
+        }
+    }
+
+    // ── Fetch + diff ─────────────────────────────────────────────────────
+    let _latestCats = [];
+    async function _fetchAndRender(force) {
+        try {
+            const res  = await fetch('/api/categories');
+            const cats = await res.json();
+            const hash = _hashCategories(cats);
+            if (force || hash !== _catStateHash) {
+                _catStateHash = hash;
+                _latestCats   = cats;
+                _renderCategories(cats);
+            }
+        } catch(e) { /* silent — keep showing stale data */ }
+    }
+
+    // ── Public: togglePin (no reload) ────────────────────────────────────
+    async function togglePin(categoryId, currentlyPinned) {
+        try {
+            const data = await fetch(`/api/categories/${categoryId}/pin`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ is_pinned: !currentlyPinned })
+            }).then(r => r.json());
             if (data.success) {
-                location.reload();
+                if (currentlyPinned) _userPinnedIds.delete(categoryId);
+                else _userPinnedIds.add(categoryId);
+                _renderCategories(_latestCats);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to update pin status');
-        });
+        } catch(e) { alert('Failed to update pin status'); }
     }
 
-    function filterCategories() {
-        const searchTerm = document.getElementById('categorySearch').value.toLowerCase();
-        const cards = document.querySelectorAll('.category-card');
+    // ── Public: search filter ────────────────────────────────────────────
+    function filterCategories() { _renderCategories(_latestCats); }
 
-        let pinnedVisible = 0;
-        let unpinnedVisible = 0;
-
-        cards.forEach(card => {
-            const name = card.getAttribute('data-name');
-            const isPinned = card.getAttribute('data-pinned') === 'true';
-
-            if (name.includes(searchTerm)) {
-                card.style.display = 'block';
-                if (isPinned) pinnedVisible++;
-                else unpinnedVisible++;
-            } else {
-                card.style.display = 'none';
-            }
-        });
-
-        // Hide/show section headers and separators based on visibility
-        const pinnedGrid = document.getElementById('pinnedCategoriesGrid');
-        const categoriesGrid = document.getElementById('categoriesGrid');
-
-        if (pinnedGrid && pinnedVisible === 0) {
-            pinnedGrid.parentElement.style.display = 'none';
-        } else if (pinnedGrid) {
-            pinnedGrid.parentElement.style.display = 'block';
-        }
-
-        // Hide separator if either section is empty
-        const separator = document.querySelector('.my-8.border-t');
-        if (separator && (pinnedVisible === 0 || unpinnedVisible === 0)) {
-            separator.style.display = 'none';
-        } else if (separator) {
-            separator.style.display = 'block';
-        }
+    // ── Polling (cross-client sync) ──────────────────────────────────────
+    function _startPolling() {
+        _fetchAndRender(true); // initial load
+        _pollTimer = setInterval(() => _fetchAndRender(false), 3000);
     }
+    document.addEventListener('DOMContentLoaded', _startPolling);
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            clearInterval(_pollTimer);
+        } else {
+            _fetchAndRender(false);
+            _pollTimer = setInterval(() => _fetchAndRender(false), 3000);
+        }
+    });
 
     // ===== CREATE CATEGORY MODAL =====
     {% if is_admin %}
@@ -415,12 +399,10 @@
         document.body.style.overflow = '';
     }
 
-    // Close modal on background click
     document.getElementById('createCategoryModal')?.addEventListener('click', function(e) {
         if (e.target === this) closeCreateCategoryModal();
     });
 
-    // Sync color picker <-> text input
     document.getElementById('createCategoryColor')?.addEventListener('input', function() {
         if (/^#[0-9A-F]{6}$/i.test(this.value)) {
             document.getElementById('createCategoryColorPicker').value = this.value;
@@ -431,20 +413,14 @@
     });
 
     async function submitCreateCategory() {
-        const name = document.getElementById('createCategoryName').value.trim();
+        const name        = document.getElementById('createCategoryName').value.trim();
         const description = document.getElementById('createCategoryDesc').value.trim();
         const bannerImage = document.getElementById('createCategoryBanner').value.trim();
         const accentColor = document.getElementById('createCategoryColor').value.trim();
-        const isFree = document.getElementById('createCategoryFree').checked;
+        const isFree      = document.getElementById('createCategoryFree').checked;
 
-        if (!name) {
-            alert('Please enter a category name');
-            return;
-        }
-        if (!/^#[0-9A-F]{6}$/i.test(accentColor)) {
-            alert('Please enter a valid hex color (e.g. #4F46E5)');
-            return;
-        }
+        if (!name) { alert('Please enter a category name'); return; }
+        if (!/^#[0-9A-F]{6}$/i.test(accentColor)) { alert('Please enter a valid hex color (e.g. #4F46E5)'); return; }
 
         const btn = event.target;
         btn.disabled = true;
@@ -458,7 +434,8 @@
             });
             const data = await response.json();
             if (data.success) {
-                location.reload();
+                closeCreateCategoryModal();
+                await _fetchAndRender(true); // immediate refresh — no page reload
             } else {
                 alert('Failed to create category');
             }
@@ -466,7 +443,7 @@
             alert('Error creating category');
         }
         btn.disabled = false;
-        btn.textContent = 'Create Category';
+        btn.textContent = 'Create';
     }
     {% endif %}
 </script>
