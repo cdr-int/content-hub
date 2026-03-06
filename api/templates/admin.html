@@ -1314,13 +1314,134 @@
         } catch(e) { /* silent — keep showing stale data */ }
     }
 
-    // Start polling on load; pause when tab hidden
+    // ── Users poller (cross-admin live sync) ────────────────────────────
+    let _usersHash = null;
+
+    function _applyUserRow(row, user) {
+        const newIsAdmin = String(user.is_admin === true);
+        const newIsSub   = String(user.is_subscribed === true);
+        if (row.dataset.isAdmin === newIsAdmin && row.dataset.isSubscribed === newIsSub) return;
+
+        row.dataset.isAdmin      = newIsAdmin;
+        row.dataset.isSubscribed = newIsSub;
+
+        const adminBadge = row.querySelector('.admin-badge');
+        if (adminBadge) {
+            if (user.is_admin) {
+                adminBadge.className = 'admin-badge px-2 py-0.5 text-xs rounded-full font-medium bg-purple-500/20 text-purple-400';
+                adminBadge.textContent = 'Admin';
+            } else {
+                adminBadge.className = 'admin-badge px-2 py-0.5 text-xs rounded-full font-medium bg-gray-700/80 text-gray-500';
+                adminBadge.textContent = 'User';
+            }
+        }
+
+        const subBadge = row.querySelector('.subscription-badge');
+        if (subBadge) {
+            if (user.is_subscribed) {
+                subBadge.className = 'subscription-badge px-2 py-0.5 text-xs rounded-full font-medium bg-green-500/20 text-green-400';
+                subBadge.textContent = 'Premium';
+            } else {
+                subBadge.className = 'subscription-badge px-2 py-0.5 text-xs rounded-full font-medium bg-gray-700/80 text-gray-500';
+                subBadge.textContent = 'Free';
+            }
+        }
+
+        // If edit modal is open for this user, refresh its buttons too
+        if (_editUserId === user._id) {
+            const adminBtn  = document.getElementById('modalAdminBtn');
+            const adminIcon = document.getElementById('modalAdminIcon');
+            const adminLabel = document.getElementById('modalAdminLabel');
+            if (adminBtn) {
+                if (user.is_admin) {
+                    adminBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border text-red-400 bg-red-500/5 border-red-500/20 hover:bg-red-500/10';
+                    adminIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>';
+                    adminLabel.textContent = 'Demote to User';
+                } else {
+                    adminBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border text-[#5eead4] bg-[#317888]/5 border-[#317888]/25 hover:bg-[#317888]/10';
+                    adminIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>';
+                    adminLabel.textContent = 'Promote to Admin';
+                }
+            }
+            const subBtn  = document.getElementById('modalSubBtn');
+            const subIcon = document.getElementById('modalSubIcon');
+            const subLabel = document.getElementById('modalSubLabel');
+            if (subBtn) {
+                if (user.is_subscribed) {
+                    subBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border text-orange-400 bg-orange-500/5 border-orange-500/20 hover:bg-orange-500/10';
+                    subIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+                    subLabel.textContent = 'Revoke Premium';
+                } else {
+                    subBtn.className = 'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors border text-green-400 bg-green-500/5 border-green-500/20 hover:bg-green-500/10';
+                    subIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+                    subLabel.textContent = 'Grant Premium';
+                }
+            }
+        }
+    }
+
+    async function _pollUsers() {
+        try {
+            const users = await fetch('/api/users').then(r => r.json());
+            const hash  = JSON.stringify(users.map(u => u._id + String(u.is_admin) + String(u.is_subscribed)));
+            if (hash === _usersHash) return;
+            _usersHash = hash;
+            // Update existing rows
+            users.forEach(user => {
+                const row = document.querySelector(`.user-row[data-user-id="${user._id}"]`);
+                if (row) _applyUserRow(row, user);
+            });
+            // Add any brand-new user rows that don't exist yet
+            users.forEach(user => {
+                if (document.querySelector(`.user-row[data-user-id="${user._id}"]`)) return;
+                const list = document.getElementById('usersList');
+                if (!list) return;
+                const div = document.createElement('div');
+                div.className = 'user-row flex items-center gap-3 px-3 py-3 rounded-xl border border-gray-700/50';
+                div.dataset.username        = (user.username || '').toLowerCase();
+                div.dataset.email           = (user.protected_email ? '' : (user.email || '')).toLowerCase();
+                div.dataset.userId          = user._id;
+                div.dataset.isAdmin         = String(user.is_admin === true);
+                div.dataset.isSubscribed    = String(user.is_subscribed === true);
+                div.dataset.created         = user.created_at || '';
+                div.dataset.lastOnline      = user.last_online || user.created_at || '';
+                div.dataset.displayUsername = user.username || '';
+                div.dataset.displayEmail    = user.protected_email ? 'Hidden' : (user.email || '');
+                div.style.background        = 'rgba(255,255,255,0.022)';
+                div.innerHTML = `
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-[#317888] to-[#447F8E] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">${escHtml((user.username||'?')[0].toUpperCase())}</div>
+                    <div class="min-w-0 flex-1">
+                        <p class="font-semibold text-gray-100 truncate text-sm">${escHtml(user.username||'')}</p>
+                        <p class="text-xs text-gray-500 truncate">${user.protected_email ? '<span class="italic">Hidden</span>' : escHtml(user.email||'')}</p>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-shrink-0">
+                        <span class="admin-badge px-2 py-0.5 text-xs rounded-full font-medium ${user.is_admin ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-700/80 text-gray-500'}">${user.is_admin ? 'Admin' : 'User'}</span>
+                        <span class="subscription-badge px-2 py-0.5 text-xs rounded-full font-medium ${user.is_subscribed ? 'bg-green-500/20 text-green-400' : 'bg-gray-700/80 text-gray-500'}">${user.is_subscribed ? 'Premium' : 'Free'}</span>
+                        <button onclick="openUserEditModal('${escHtml(user._id)}')" title="Edit user"
+                            class="ml-1 p-1.5 rounded-lg text-gray-500 hover:text-[#5eead4] hover:bg-[#317888]/15 transition-colors">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                    </div>`;
+                list.appendChild(div);
+                filterAndSortUsers();
+            });
+        } catch(e) { /* silent */ }
+    }
+
+    // Start all pollers on load; pause when tab hidden
     document.addEventListener('DOMContentLoaded', () => {
         _pollAdminSettings();
+        _pollUsers();
         let _settingsPollTimer = setInterval(_pollAdminSettings, 3000);
+        let _usersPollTimer    = setInterval(_pollUsers, 3000);
         document.addEventListener('visibilitychange', () => {
-            if (document.hidden) clearInterval(_settingsPollTimer);
-            else { _pollAdminSettings(); _settingsPollTimer = setInterval(_pollAdminSettings, 3000); }
+            if (document.hidden) {
+                clearInterval(_settingsPollTimer);
+                clearInterval(_usersPollTimer);
+            } else {
+                _pollAdminSettings(); _settingsPollTimer = setInterval(_pollAdminSettings, 3000);
+                _pollUsers();         _usersPollTimer    = setInterval(_pollUsers, 3000);
+            }
         });
     });
 </script>
