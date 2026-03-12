@@ -409,6 +409,55 @@ def index():
                 doc['category_accent_color'] = cat.get('accent_color',
                                                        '#317888')
 
+            # Attach folder path — collect all unique folder IDs needed
+            folder_ids_needed = list({
+                str(c.get('folder_id', ''))
+                for c in content_docs if c.get('folder_id')
+            })
+            folders_map = {}
+            if folder_ids_needed:
+                for fld in folders_collection.find(
+                    {'_id': {'$in': [ObjectId(fid) for fid in folder_ids_needed if fid]}}
+                ):
+                    folders_map[str(fld['_id'])] = fld
+
+                # Also fetch any parent folders needed to build ancestry paths
+                parent_ids_needed = list({
+                    str(fld.get('parent_folder_id', ''))
+                    for fld in folders_map.values()
+                    if fld.get('parent_folder_id')
+                } - set(folders_map.keys()))
+                depth = 0
+                while parent_ids_needed and depth < 6:
+                    for fld in folders_collection.find(
+                        {'_id': {'$in': [ObjectId(fid) for fid in parent_ids_needed if fid]}}
+                    ):
+                        folders_map[str(fld['_id'])] = fld
+                    parent_ids_needed = list({
+                        str(fld.get('parent_folder_id', ''))
+                        for fld in folders_map.values()
+                        if fld.get('parent_folder_id') and str(fld.get('parent_folder_id')) not in folders_map
+                    })
+                    depth += 1
+
+            def _build_folder_path(folder_id):
+                """Returns ordered list of folder names from root -> leaf."""
+                path = []
+                current = str(folder_id) if folder_id else None
+                visited = set()
+                while current and current in folders_map:
+                    if current in visited:
+                        break
+                    visited.add(current)
+                    path.insert(0, folders_map[current].get('name', ''))
+                    parent = folders_map[current].get('parent_folder_id')
+                    current = str(parent) if parent else None
+                return path
+
+            for doc in content_docs:
+                folder_id = doc.get('folder_id')
+                doc['folder_path'] = _build_folder_path(folder_id) if folder_id else []
+
             trending_content = sorted(content_docs,
                                       key=lambda x: x['favorite_count'],
                                       reverse=True)
@@ -1797,108 +1846,18 @@ def favorites_page():
 
 @app.route('/api/imgproxy')
 def image_proxy():
-    """
-    Proxy external images and videos to avoid NotSameSite redirect blocks.
-    Handles baka-style redirect links for both images and videos by following
-    all redirects and sniffing the final content-type.
-    """
+    """Proxy external images to avoid NotSameSite redirect blocks."""
     url = request.args.get('url', '')
     if not url or not url.startswith('https://'):
         return '', 400
-
-    # Determine if caller expects video (hint from query param, optional)
-    want_video = request.args.get('video', '').lower() in ('1', 'true')
-
     try:
+        resp = req_lib.get(url,
+                           timeout=10,
+                           allow_redirects=True,
+                           headers={'User-Agent': 'Mozilla/5.0'})
+        content_type = resp.headers.get('Content-Type', 'image/jpeg')
         from flask import Response
-
-        # HEAD first to resolve redirects cheaply and check content-type
-        try:
-            head = req_lib.head(
-                url,
-                timeout=8,
-                allow_redirects=True,
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Referer': url,
-                })
-            final_url = head.url
-            content_type = head.headers.get('Content-Type', '')
-        except Exception:
-            # HEAD failed (some servers reject it) – fall back to GET
-            final_url = url
-            content_type = ''
-
-        is_video = (
-            want_video
-            or 'video/' in content_type
-            or any(final_url.lower().endswith(ext)
-                   for ext in ('.mp4', '.webm', '.mov', '.m4v', '.mkv'))
-        )
-
-        if is_video:
-            # Stream video with range support so the browser can seek
-            range_header = request.headers.get('Range')
-            req_headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'Referer': url,
-            }
-            if range_header:
-                req_headers['Range'] = range_header
-
-            resp = req_lib.get(
-                final_url,
-                timeout=30,
-                allow_redirects=True,
-                headers=req_headers,
-                stream=True,
-            )
-
-            ct = resp.headers.get('Content-Type', 'video/mp4')
-            # If the server returned HTML (e.g. a landing page) instead of video,
-            # fall back to mp4 assumption — browser will decide if it can play it
-            if 'text/html' in ct:
-                ct = 'video/mp4'
-
-            status = resp.status_code  # preserve 206 Partial Content for seeks
-
-            forwarded_headers = {
-                'Content-Type': ct,
-                'Accept-Ranges': resp.headers.get('Accept-Ranges', 'bytes'),
-            }
-            if 'Content-Range' in resp.headers:
-                forwarded_headers['Content-Range'] = resp.headers['Content-Range']
-            if 'Content-Length' in resp.headers:
-                forwarded_headers['Content-Length'] = resp.headers['Content-Length']
-
-            def generate():
-                for chunk in resp.iter_content(chunk_size=1024 * 64):
-                    if chunk:
-                        yield chunk
-
-            return Response(generate(), status=status, headers=forwarded_headers)
-
-        else:
-            # Image path – simple fetch
-            resp = req_lib.get(
-                final_url,
-                timeout=15,
-                allow_redirects=True,
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'Referer': url,
-                })
-            ct = resp.headers.get('Content-Type', 'image/jpeg')
-            # If redirect landed on an HTML page the URL was not a direct image –
-            # return a transparent 1×1 PNG so the img tag doesn't show a broken icon
-            if 'text/html' in ct:
-                import base64
-                transparent_png = base64.b64decode(
-                    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
-                )
-                return Response(transparent_png, content_type='image/png')
-            return Response(resp.content, content_type=ct)
-
+        return Response(resp.content, content_type=content_type)
     except Exception as e:
         return str(e), 502
 
