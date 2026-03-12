@@ -151,7 +151,7 @@
         const headerDiv = _e('div', { class: 'relative h-32 overflow-hidden' });
         if (cat.banner_image) {
             headerDiv.appendChild(_e('img', {
-                src: cat.banner_image, alt: cat.name,
+                src: '/api/imgproxy?url=' + encodeURIComponent(cat.banner_image), alt: cat.name,
                 class: 'absolute inset-0 w-full h-full object-cover'
             }));
             headerDiv.appendChild(_e('div', { class: 'absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/10' }));
