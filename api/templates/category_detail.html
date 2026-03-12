@@ -121,6 +121,55 @@
         opacity: 0.9;
     }
 
+    .lightbox-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10001;
+        background: rgba(0, 0, 0, 0.5);
+        border: none;
+        color: white;
+        cursor: pointer;
+        border-radius: 50%;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, opacity 0.2s;
+        flex-shrink: 0;
+        outline: none;
+    }
+    .lightbox-nav:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    .lightbox-nav.hidden-nav {
+        opacity: 0;
+        pointer-events: none;
+    }
+    .lightbox-nav-prev { left: 12px; }
+    .lightbox-nav-next { right: 12px; }
+
+    @media (max-width: 480px) {
+        .lightbox-nav { width: 36px; height: 36px; }
+        .lightbox-nav-prev { left: 6px; }
+        .lightbox-nav-next { right: 6px; }
+    }
+
+    .lightbox-counter {
+        position: absolute;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgba(255,255,255,0.7);
+        font-size: 0.8rem;
+        background: rgba(0,0,0,0.4);
+        padding: 3px 10px;
+        border-radius: 999px;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+
     @keyframes fadeIn {
         from { opacity: 0; }
         to { opacity: 1; }
@@ -262,7 +311,7 @@
             <!-- Background: Banner Image or Gradient -->
             {% if category.banner_image %}
             <div class="absolute inset-0">
-                <img src="/api/imgproxy?url={{ category.banner_image | urlencode }}" alt="{{ category.name }}" class="w-full h-full object-cover">
+                <img src="{{ category.banner_image }}" alt="{{ category.name }}" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div>
             </div>
             {% else %}
@@ -459,7 +508,7 @@
                         {% elif item.media_type == 'video' %}
                         <div class="relative">
                             <video controls class="w-full h-auto">
-                                <source src="/api/imgproxy?url={{ item.media_url | urlencode }}&video=1" type="video/mp4">
+                                <source src="/api/imgproxy?url={{ item.media_url | urlencode }}" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
                             {% if item.title or item.caption %}
@@ -606,6 +655,13 @@
 <!-- Lightbox -->
 <div id="lightbox" class="lightbox" onclick="closeLightbox()">
     <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+    <div id="lightbox-counter" class="lightbox-counter"></div>
+    <button id="lightbox-prev" class="lightbox-nav lightbox-nav-prev" onclick="event.stopPropagation(); lightboxNav(-1)" aria-label="Previous image">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button id="lightbox-next" class="lightbox-nav lightbox-nav-next" onclick="event.stopPropagation(); lightboxNav(1)" aria-label="Next image">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
     <img id="lightbox-image" class="lightbox-content" onclick="event.stopPropagation()" referrerpolicy="no-referrer">
     <div id="lightbox-info" class="lightbox-info" onclick="event.stopPropagation()">
         <div id="lightbox-title" class="lightbox-title"></div>
@@ -1245,7 +1301,7 @@
                      style="background-color:${color}15; border:1px solid ${color}30;"
                      onclick="navigateToSubfolder('${sf._id}')">
                     ${sf.thumbnail_url 
-                        ? `<div class="w-full aspect-video overflow-hidden relative"><img src="${sf.thumbnail_url}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div></div>` 
+                        ? `<div class="w-full aspect-video overflow-hidden relative"><img src="${proxyUrl(sf.thumbnail_url)}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div></div>` 
                         : `<div class="w-full aspect-video flex items-center justify-center relative overflow-hidden" style="background:linear-gradient(135deg,${color}25,${color}08);">
                             <div class="absolute -top-3 -right-3 w-12 h-12 rounded-full opacity-10" style="background-color:${color}"></div>
                             <svg class="w-10 h-10 relative z-10 opacity-70" style="color:${color}" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24"><path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
@@ -1361,7 +1417,7 @@
                     } else if (item.media_type === 'video') {
                         html += `
                             <div class="relative">
-                                <video controls class="w-full h-auto"><source src="${proxyUrl(item.media_url||'', true)}" type="video/mp4"></video>
+                                <video controls class="w-full h-auto"><source src="${proxyUrl(item.media_url||'')}" type="video/mp4"></video>
                                 ${(item.title||item.caption) ? `<div class="content-overlay">${item.title?`<div class="content-overlay-title">${escapeHtml(item.title)}</div>`:''} ${item.caption?`<div class="content-overlay-caption">${escapeHtml(item.caption)}</div>`:''}</div>` : ''}
                             </div>`;
                     } else {
@@ -1582,18 +1638,100 @@
     // LIGHTBOX
     // ============================
 
+    // Flat ordered list of all image entries visible in the current context.
+    // Each entry: { url, title, caption }
+    // Rebuilt every time the lightbox opens so it always reflects the current DOM.
+    let _lbImages = [];
+    let _lbIndex  = -1;
+
+    function _buildImageIndex(clickedUrl) {
+        // Collect every .media-item[data-url] that is an image (no video class).
+        // Works for both root-page items (Jinja) and dynamically injected folder items.
+        const entries = [];
+        let startIndex = 0;
+
+        // Root-content images: data-url is set directly on .media-item
+        document.querySelectorAll('.media-item[data-url]').forEach(el => {
+            const url = el.dataset.url || '';
+            if (!url) return;
+            entries.push({ url, title: el.dataset.title || '', caption: el.dataset.caption || '' });
+            if (url === clickedUrl) startIndex = entries.length - 1;
+        });
+
+        // Folder-content images: .media-item[data-id] — URL lives in _folderUrlMap
+        document.querySelectorAll('.media-item[data-id]').forEach(el => {
+            const url = (window._folderUrlMap && window._folderUrlMap[el.dataset.id]) || '';
+            if (!url) return;
+            entries.push({ url, _id: el.dataset.id || '', title: el.dataset.title || '', caption: el.dataset.caption || '' });
+            if (url === clickedUrl) startIndex = entries.length - 1;
+        });
+
+        _lbImages = entries;
+        _lbIndex  = startIndex;
+    }
+
+    function _applyLightboxEntry(entry) {
+        const img = document.getElementById('lightbox-image');
+
+        // Ensure the image is loaded even if it hasn't been lazy-loaded yet.
+        // We load it directly (bypassing IntersectionObserver) so navigation
+        // never shows a blank image just because the user skipped scrolling.
+        if (entry.url) {
+            // Force-load the source thumbnail in the grid if it hasn't lazy-loaded yet,
+            // so navigating to an unscrolled image still works.
+            // For root items: img.lazy-img[data-src=url]
+            // For folder items: img.folder-img[data-id=id] matched via _lbImages entry id
+            document.querySelectorAll(`img.lazy-img[data-src="${CSS.escape(entry.url)}"]`).forEach(srcImg => {
+                if (!srcImg.complete || !srcImg.naturalWidth) {
+                    srcImg.src = proxyUrl(entry.url);
+                    srcImg.removeAttribute('data-src');
+                }
+            });
+            if (entry._id) {
+                const folderImg = document.querySelector(`img.folder-img[data-id="${CSS.escape(entry._id)}"]`);
+                if (folderImg && (!folderImg.complete || !folderImg.naturalWidth)) {
+                    folderImg.src = proxyUrl(entry.url);
+                }
+            }
+        }
+
+        img.src = proxyUrl(entry.url);
+
+        const hasInfo = entry.title || entry.caption;
+        document.getElementById('lightbox-info').style.display = hasInfo ? 'block' : 'none';
+        const titleEl   = document.getElementById('lightbox-title');
+        const captionEl = document.getElementById('lightbox-caption');
+        if (entry.title)   { titleEl.textContent   = entry.title;   titleEl.style.display   = 'block'; }
+        else               { titleEl.style.display   = 'none'; }
+        if (entry.caption) { captionEl.textContent = entry.caption; captionEl.style.display = 'block'; }
+        else               { captionEl.style.display = 'none'; }
+
+        // Update counter
+        const counter = document.getElementById('lightbox-counter');
+        if (_lbImages.length > 1) {
+            counter.textContent = `${_lbIndex + 1} / ${_lbImages.length}`;
+            counter.style.display = 'block';
+        } else {
+            counter.style.display = 'none';
+        }
+
+        // Show/hide arrows
+        document.getElementById('lightbox-prev').classList.toggle('hidden-nav', _lbImages.length <= 1);
+        document.getElementById('lightbox-next').classList.toggle('hidden-nav', _lbImages.length <= 1);
+    }
+
     function openLightbox(url, type, title, caption) {
         if (type !== 'image') return;
-        const lightbox = document.getElementById('lightbox');
-        document.getElementById('lightbox-image').src = proxyUrl(url);
-        const hasInfo = title || caption;
-        document.getElementById('lightbox-info').style.display = hasInfo ? 'block' : 'none';
-        if (title) { document.getElementById('lightbox-title').textContent = title; document.getElementById('lightbox-title').style.display='block'; }
-        else document.getElementById('lightbox-title').style.display='none';
-        if (caption) { document.getElementById('lightbox-caption').textContent = caption; document.getElementById('lightbox-caption').style.display='block'; }
-        else document.getElementById('lightbox-caption').style.display='none';
-        lightbox.classList.add('active');
+        _buildImageIndex(url);
+        _applyLightboxEntry(_lbImages[_lbIndex] || { url, title: title||'', caption: caption||'' });
+        document.getElementById('lightbox').classList.add('active');
         document.body.style.overflow = 'hidden';
+    }
+
+    function lightboxNav(direction) {
+        if (_lbImages.length <= 1) return;
+        _lbIndex = (_lbIndex + direction + _lbImages.length) % _lbImages.length;
+        _applyLightboxEntry(_lbImages[_lbIndex]);
     }
 
     function closeLightbox() {
@@ -1603,6 +1741,10 @@
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') { closeLightbox(); closeFolderModal(); }
+        if (document.getElementById('lightbox').classList.contains('active')) {
+            if (e.key === 'ArrowLeft')  lightboxNav(-1);
+            if (e.key === 'ArrowRight') lightboxNav(1);
+        }
     });
 
     // ============================
@@ -1727,11 +1869,10 @@
         });
     }, { rootMargin: '200px 0px' }); // start loading 200px before entering viewport
 
-    function proxyUrl(url, isVideo) {
+    function proxyUrl(url) {
         if (!url) return '';
         // Route through our server to avoid NotSameSite redirect blocks
-        const base = '/api/imgproxy?url=' + encodeURIComponent(url);
-        return isVideo ? base + '&video=1' : base;
+        return '/api/imgproxy?url=' + encodeURIComponent(url);
     }
 
     function observeLazyImages(root) {
