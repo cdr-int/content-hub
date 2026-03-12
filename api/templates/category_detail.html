@@ -262,7 +262,7 @@
             <!-- Background: Banner Image or Gradient -->
             {% if category.banner_image %}
             <div class="absolute inset-0">
-                <img src="{{ category.banner_image }}" alt="{{ category.name }}" class="w-full h-full object-cover">
+                <img src="/api/imgproxy?url={{ category.banner_image | urlencode }}" alt="{{ category.name }}" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30"></div>
             </div>
             {% else %}
@@ -384,7 +384,7 @@
                     <!-- Thumbnail or icon area -->
                     {% if folder.thumbnail_url %}
                     <div class="w-full aspect-video overflow-hidden relative">
-                        <img src="{{ folder.thumbnail_url }}" alt="{{ folder.name }}" class="w-full h-full object-cover">
+                        <img src="/api/imgproxy?url={{ folder.thumbnail_url | urlencode }}" alt="{{ folder.name }}" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                     </div>
                     {% else %}
@@ -459,7 +459,7 @@
                         {% elif item.media_type == 'video' %}
                         <div class="relative">
                             <video controls class="w-full h-auto">
-                                <source src="/api/imgproxy?url={{ item.media_url | urlencode }}" type="video/mp4">
+                                <source src="/api/imgproxy?url={{ item.media_url | urlencode }}&video=1" type="video/mp4">
                                 Your browser does not support the video tag.
                             </video>
                             {% if item.title or item.caption %}
@@ -1361,7 +1361,7 @@
                     } else if (item.media_type === 'video') {
                         html += `
                             <div class="relative">
-                                <video controls class="w-full h-auto"><source src="${proxyUrl(item.media_url||'')}" type="video/mp4"></video>
+                                <video controls class="w-full h-auto"><source src="${proxyUrl(item.media_url||'', true)}" type="video/mp4"></video>
                                 ${(item.title||item.caption) ? `<div class="content-overlay">${item.title?`<div class="content-overlay-title">${escapeHtml(item.title)}</div>`:''} ${item.caption?`<div class="content-overlay-caption">${escapeHtml(item.caption)}</div>`:''}</div>` : ''}
                             </div>`;
                     } else {
@@ -1727,10 +1727,11 @@
         });
     }, { rootMargin: '200px 0px' }); // start loading 200px before entering viewport
 
-    function proxyUrl(url) {
+    function proxyUrl(url, isVideo) {
         if (!url) return '';
         // Route through our server to avoid NotSameSite redirect blocks
-        return '/api/imgproxy?url=' + encodeURIComponent(url);
+        const base = '/api/imgproxy?url=' + encodeURIComponent(url);
+        return isVideo ? base + '&video=1' : base;
     }
 
     function observeLazyImages(root) {
