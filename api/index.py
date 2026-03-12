@@ -416,9 +416,13 @@ def index():
             })
             folders_map = {}
             if folder_ids_needed:
-                for fld in folders_collection.find(
-                    {'_id': {'$in': [ObjectId(fid) for fid in folder_ids_needed if fid]}}
-                ):
+                for fld in folders_collection.find({
+                        '_id':
+                    {
+                        '$in':
+                        [ObjectId(fid) for fid in folder_ids_needed if fid]
+                    }
+                }):
                     folders_map[str(fld['_id'])] = fld
 
                 # Also fetch any parent folders needed to build ancestry paths
@@ -429,14 +433,20 @@ def index():
                 } - set(folders_map.keys()))
                 depth = 0
                 while parent_ids_needed and depth < 6:
-                    for fld in folders_collection.find(
-                        {'_id': {'$in': [ObjectId(fid) for fid in parent_ids_needed if fid]}}
-                    ):
+                    for fld in folders_collection.find({
+                            '_id': {
+                                '$in': [
+                                    ObjectId(fid) for fid in parent_ids_needed
+                                    if fid
+                                ]
+                            }
+                    }):
                         folders_map[str(fld['_id'])] = fld
                     parent_ids_needed = list({
                         str(fld.get('parent_folder_id', ''))
                         for fld in folders_map.values()
-                        if fld.get('parent_folder_id') and str(fld.get('parent_folder_id')) not in folders_map
+                        if fld.get('parent_folder_id')
+                        and str(fld.get('parent_folder_id')) not in folders_map
                     })
                     depth += 1
 
@@ -456,7 +466,8 @@ def index():
 
             for doc in content_docs:
                 folder_id = doc.get('folder_id')
-                doc['folder_path'] = _build_folder_path(folder_id) if folder_id else []
+                doc['folder_path'] = _build_folder_path(
+                    folder_id) if folder_id else []
 
             trending_content = sorted(content_docs,
                                       key=lambda x: x['favorite_count'],
